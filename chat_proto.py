@@ -36,7 +36,7 @@ async def handle_ack(ctx: Context, sender: str, msg: ChatAcknowledgement):
     messages = get_message_history(chat_id="TODO")
 
     # Storing messages
-    # TODO: figure out the shape of data for the helper functiosn for this
+    # TODO: use the get_message_history and append_message_to_history here
 
     # Order flow
     intent: Intent = classify_intent(chat_history=messages)
