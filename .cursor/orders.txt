@@ -1,0 +1,28 @@
+Here is documentation for the orders api for the square developer
+POST/v2/orders
+Create order
+Creates a new order that can include information about products for purchase and settings to apply to the purchase. API Reference ->
+
+Sign in to view access tokens
+Sign in
+
+Body
+
+
+idempotency_key
+
+
+
+
+string
+
+idempotency_key
+
+
+Generate
+
+order
+
+
+
+Order
