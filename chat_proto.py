@@ -9,6 +9,10 @@ from uagents_core.contrib.protocols.chat import (
     chat_protocol_spec,
 )
 
+from menu import MENU_ITEMS, get_menu
+from square_utils import place_order
+from uagents_utils import Intent, classify_intent, get_message_history, get_requested_menu_item_number, mark_user_as_ordered, user_has_ordered
+
 chat_proto = Protocol(spec=chat_protocol_spec)
 
 @chat_proto.on_message(ChatMessage)
@@ -28,4 +32,28 @@ async def handle_ack(ctx: Context, sender: str, msg: ChatAcknowledgement):
         sender,
         ChatAcknowledgement(timestamp=datetime.now(), acknowledged_msg_id=msg.msg_id),
     )
+    user_id = sender
+    messages = get_message_history(chat_id="TODO")
 
+    # Storing messages
+    # TODO: figure out the shape of data for the helper functiosn for this
+
+    # Order flow
+    intent: Intent = classify_intent(chat_history=messages)
+
+    match (intent):
+        case Intent.PLACE_ORDER:
+            if user_has_ordered(ctx=ctx, user_id=user_id):
+                ctx.send(sender, ChatMessage(content="Sorry! Only one per person for promotional event"))
+            else:
+                menu_item_number = get_requested_menu_item_number(chat_history=messages)
+                variant_id = MENU_ITEMS[menu_item_number]
+                place_order(variant_id=variant_id, idempotency_key=uuid4())
+                mark_user_as_ordered(user_id=user_id)
+        case Intent.WANT_TO_ORDER:
+            menu = get_menu()
+            msg = "Thanks for coming to the promotional Fetch-A-Coffee event! Please select something from the menu below\n" + menu
+            ctx.send(sender, ChatMessage(content=msg))
+        case _:
+            ctx.send(sender, ChatMessage(content="Sorry, I can only help you order a coffee. Try choosing something from the menu or ask me for the menu!"))
+            
