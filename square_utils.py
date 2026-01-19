@@ -101,6 +101,7 @@ def place_order(variation_id: str, idempotency_key: str = None) -> None:
     if idempotency_key is None:
         idempotency_key = str(uuid.uuid4())
 
+    # TODO: Make this locations retrieve from .env
     locations_response = client.locations.list()
     if not locations_response.locations:
         raise Exception("No locations found for this Square account")
