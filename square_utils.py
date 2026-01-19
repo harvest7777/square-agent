@@ -1,6 +1,7 @@
-import os
 from dotenv import load_dotenv
 from square import Square
+import os
+import uuid
 
 load_dotenv()
 
@@ -80,21 +81,46 @@ def _get_variation_info_from_item_id(item_id: str) -> str:
         pretty_menu += pretty_item
     return pretty_menu
     
-# TODO: Implement this
-def place_order(variation_id: str) -> None:
+
+def place_order(variation_id: str, idempotency_key: str = None) -> None:
     """
     Place an unpaid order to Square for the specified variation.
-    
+
     This function will raise an error if there is any issue placing the order.
     Otherwise, it will successfully place an unpaid order to Square.
-    
+
     Args:
         variation_id: The Square catalog variation ID for the item to order
-    
+        idempotency_key: Optional unique key to prevent duplicate orders. If not provided,
+                        a new UUID will be generated. To prevent duplicates on page refresh,
+                        provide a consistent key for the same order attempt.
+
     Raises:
         Exception: If there is any issue placing the order with Square
     """
-    pass
+    if idempotency_key is None:
+        idempotency_key = str(uuid.uuid4())
+
+    locations_response = client.locations.list()
+    if not locations_response.locations:
+        raise Exception("No locations found for this Square account")
+    location_id = locations_response.locations[0].id
+
+    response = client.orders.create(
+        idempotency_key=idempotency_key,
+        order={
+            "location_id": location_id,
+            "line_items": [
+                {
+                    "catalog_object_id": variation_id,
+                    "quantity": "1"
+                }
+            ]
+        }
+    )
+
+    if response.errors:
+        raise Exception(f"Failed to place order: {response.errors}")
     
 # catalog_ids = ["CYUVQKK4G4YJZCX26GISIU5A","3YGHZQN4A4N5W2TFGNKBPF47","A54LFYWWYJYZJ7DIAU2AXDIW"]
 # for c in catalog_ids:
