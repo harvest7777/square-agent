@@ -26,5 +26,3 @@ def getMenu() -> str:
         menu += f"{i}. {item}\n"
     
     return menu
-
-print(getMenu())
