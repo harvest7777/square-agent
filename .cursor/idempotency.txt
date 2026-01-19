@@ -1,0 +1,17 @@
+Idempotency key
+When an application calls a Square API, it must be able to repeat an API operation when needed and get the same result each time. For example, if a network error occurs while updating a catalog item, the application might retry the same request and must ensure that the item updates only once.
+
+This behavior is called idempotency. Most Square APIs that modify data (create, update, or delete) require you to provide an idempotency key that uniquely identifies the request. This allows you to retry the request if necessary, without duplicating work.
+
+You can provide a custom unique key or simply generate one. There are language specific functions that you can use to generate unique keys. For more information, see Idempotency.
+
+In the following example, you can see how the idempotency_key is generated in a Python application to create an order:
+
+
+
+client.orders.create(
+    idempotency_key=str(uuid.uuid4()),
+    order={
+        "location_id": location.id
+    }
+)
