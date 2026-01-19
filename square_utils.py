@@ -49,7 +49,7 @@ def _get_prety_menu_string_from_variation_id(variation_id: str) -> str:
     pretty_item = f"{base_item_name} - {name}: {_format_cents(price)}\n"
     return pretty_item
 
-def _getVariationInfoFromItemId(item_id: str) -> str:
+def _get_variation_info_from_item_id(item_id: str) -> str:
     """
     Developer utility function to retrieve and display item variation information.
     
@@ -81,7 +81,7 @@ def _getVariationInfoFromItemId(item_id: str) -> str:
     return pretty_menu
     
 # TODO: Implement this
-def placeOrder(variation_id: str) -> None:
+def place_order(variation_id: str) -> None:
     """
     Place an unpaid order to Square for the specified variation.
     

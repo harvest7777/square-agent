@@ -8,7 +8,7 @@ MENU_ITEMS = {
     3: "3BCDXFOJKL3G647HEQYELWK3",
 }
 
-def getMenu() -> str:
+def get_menu() -> str:
     """
     Retrieve and format the menu using hardcoded menu items.
     
