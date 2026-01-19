@@ -10,6 +10,32 @@ def user_has_ordered(ctx: Context, user_id: str) -> bool:
     return ctx.storage.get(_get_user_orderd_key(user_id))
 
 # TODO
+def get_requested_menu_item_number(chat_history: any) -> int:
+    """
+    TODO: Extract the menu item number that the user requested from the chat history.
+    
+    This function is a placeholder and needs to be implemented. We don't know how
+    the developer API will work yet. Developers should look into the implementation
+    and get back to the team with their findings.
+    
+    This function will raise an error if it is unable to determine what the user
+    was trying to order from the chat history.
+    
+    Args:
+        chat_history: The chat history containing user messages (format TBD)
+    
+    Returns:
+        The menu item number (integer) that the user requested
+    
+    Raises:
+        ValueError: If unable to determine what menu item the user was trying to order
+    
+    Note:
+        This is a TODO item. Implementation details need to be researched and discussed with the team.
+    """
+    pass
+
+# TODO
 def get_message_history(chat_id: str) -> list:
     """
     TODO: Retrieve the message history for a particular chat ID.
