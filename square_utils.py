@@ -1,10 +1,7 @@
 import os
-from traceback import format_exception
-import uuid
-from pprint import pprint
-
 from dotenv import load_dotenv
 from square import Square
+
 load_dotenv()
 
 from square.environment import SquareEnvironment
