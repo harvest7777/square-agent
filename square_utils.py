@@ -15,7 +15,7 @@ client = Square(
 )
 
 
-def _formatCents(cents: int) -> str:
+def _format_cents(cents: int) -> str:
     """
     Convert cents to a formatted USD currency string.
     
@@ -28,7 +28,7 @@ def _formatCents(cents: int) -> str:
     dollars = cents / 100.0
     return f"${dollars:.2f}"
 
-def _getPrettyMenuStringFromVariationId(variation_id: str) -> str:
+def _get_prety_menu_string_from_variation_id(variation_id: str) -> str:
 
     response = client.catalog.object.get(
     object_id=variation_id
@@ -46,7 +46,7 @@ def _getPrettyMenuStringFromVariationId(variation_id: str) -> str:
     data = response.object.item_variation_data
     name = data.name
     price = data.price_money.amount
-    pretty_item = f"{base_item_name} - {name}: {_formatCents(price)}\n"
+    pretty_item = f"{base_item_name} - {name}: {_format_cents(price)}\n"
     return pretty_item
 
 def _getVariationInfoFromItemId(item_id: str) -> str:
@@ -76,10 +76,25 @@ def _getVariationInfoFromItemId(item_id: str) -> str:
         data = variation.item_variation_data
         name = data.name
         price = data.price_money.amount
-        pretty_item = f"{item_name} - {name}: {_formatCents(price)} [Variation ID: {variation_id}] \n"
+        pretty_item = f"{item_name} - {name}: {_format_cents(price)} [Variation ID: {variation_id}] \n"
         pretty_menu += pretty_item
     return pretty_menu
     
+# TODO: Implement this
+def placeOrder(variation_id: str) -> None:
+    """
+    Place an unpaid order to Square for the specified variation.
+    
+    This function will raise an error if there is any issue placing the order.
+    Otherwise, it will successfully place an unpaid order to Square.
+    
+    Args:
+        variation_id: The Square catalog variation ID for the item to order
+    
+    Raises:
+        Exception: If there is any issue placing the order with Square
+    """
+    pass
     
 # catalog_ids = ["CYUVQKK4G4YJZCX26GISIU5A","3YGHZQN4A4N5W2TFGNKBPF47","A54LFYWWYJYZJ7DIAU2AXDIW"]
 # for c in catalog_ids:
