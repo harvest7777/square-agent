@@ -1,5 +1,6 @@
 from enum import Enum
 from uagents import Context
+import re
 
 
 class Intent(str, Enum):
@@ -49,31 +50,63 @@ def classify_intent(chat_history: any) -> Intent:
     """
     pass
 
-# TODO
-def get_requested_menu_item_number(chat_history: any) -> int:
+def get_requested_menu_item_number(chat_history: list) -> int:
     """
-    TODO: Extract the menu item number that the user requested from the chat history.
-    
-    This function is a placeholder and needs to be implemented. We don't know how
-    the developer API will work yet. Developers should look into the implementation
-    and get back to the team with their findings.
-    
-    This function will raise an error if it is unable to determine what the user
-    was trying to order from the chat history.
-    
+    Extract the menu item number that the user requested from the chat history.
+
+    This function parses through the chat history (most recent first) and looks for
+    menu item numbers using pattern matching. It supports various formats:
+    - Direct numbers: "1", "2", "3"
+    - Item references: "item 1", "number 2", "#3"
+    - Ordinal words: "first", "second", "third"
+
     Args:
-        chat_history: The chat history containing user messages (format TBD)
-    
+        chat_history: List of message strings from the chat
+
     Returns:
         The menu item number (integer) that the user requested
-    
+
     Raises:
         ValueError: If unable to determine what menu item the user was trying to order
-    
-    Note:
-        This is a TODO item. Implementation details need to be researched and discussed with the team.
     """
-    pass
+
+    # Maybe we can do llama index for this
+    # Word to number mapping for ordinal references
+    word_to_number = {
+        "first": 1, "one": 1, "1st": 1,
+        "second": 2, "two": 2, "2nd": 2,
+        "third": 3, "three": 3, "3rd": 3,
+    }
+
+    # Valid menu item numbers (1, 2, 3 based on MENU_ITEMS)
+    valid_items = {1, 2, 3}
+
+    # Process messages from most recent to oldest
+    for message in reversed(chat_history):
+        message_lower = message.lower()
+
+        # Check for ordinal words first
+        for word, number in word_to_number.items():
+            if word in message_lower:
+                return number
+
+        # Pattern to match item references like "item 1", "number 2", "#3", or standalone digits
+        patterns = [
+            r'item\s*(\d+)',      # "item 1", "item1"
+            r'number\s*(\d+)',    # "number 2", "number2"
+            r'#(\d+)',            # "#3"
+            r'option\s*(\d+)',    # "option 1"
+            r'\b(\d+)\b',         # standalone digit
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, message_lower)
+            if match:
+                item_number = int(match.group(1))
+                if item_number in valid_items:
+                    return item_number
+
+    raise ValueError("Unable to determine the requested menu item from chat history")
 
 def get_message_history(ctx: Context, chat_id: str) -> list:
     """
