@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from intent_examples import INTENT_EXAMPLES
+from intent_examples import INTENT_EXAMPLES, MENU_ITEM_EXAMPLES
 
 load_dotenv()
 
@@ -14,6 +14,9 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 
 # Cache for intent example embeddings (computed once)
 _intent_embeddings_cache = {}
+
+# Cache for menu item example embeddings (computed once)
+_menu_item_embeddings_cache = {}
 
 
 def get_embedding(text: str) -> list:
@@ -72,3 +75,22 @@ def get_intent_embeddings() -> dict:
             ]
 
     return _intent_embeddings_cache
+
+
+def get_menu_item_embeddings() -> dict:
+    """
+    Get or compute embeddings for all menu item examples.
+    Results are cached to avoid repeated API calls.
+
+    Returns:
+        Dictionary mapping menu item numbers (int) to lists of embedding vectors
+    """
+    global _menu_item_embeddings_cache
+
+    if not _menu_item_embeddings_cache:
+        for item_number, examples in MENU_ITEM_EXAMPLES.items():
+            _menu_item_embeddings_cache[item_number] = [
+                get_embedding(example) for example in examples
+            ]
+
+    return _menu_item_embeddings_cache
