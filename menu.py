@@ -26,3 +26,5 @@ def get_menu() -> str:
         menu += f"{i}. {item}\n"
     
     return menu
+
+print(get_menu())

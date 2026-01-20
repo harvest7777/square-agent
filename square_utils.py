@@ -100,6 +100,7 @@ def place_order(variation_id: str, idempotency_key: str = None) -> None:
     """
     if idempotency_key is None:
         idempotency_key = str(uuid.uuid4())
+        print(idempotency_key)
 
     # TODO: Make this locations retrieve from .env
     locations_response = client.locations.list()
@@ -126,3 +127,5 @@ def place_order(variation_id: str, idempotency_key: str = None) -> None:
 # catalog_ids = ["CYUVQKK4G4YJZCX26GISIU5A","3YGHZQN4A4N5W2TFGNKBPF47","A54LFYWWYJYZJ7DIAU2AXDIW"]
 # for c in catalog_ids:
 #     print(_getVariationInfoFromItemId(c))
+
+place_order("TPPWAJQ4O5FDHUNHX3WMQJG2")

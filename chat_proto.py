@@ -21,7 +21,11 @@ async def handle_message(ctx: Context, sender: str, msg: ChatMessage):
         sender,
         ChatAcknowledgement(timestamp=datetime.now(), acknowledged_msg_id=msg.msg_id),
     )
+
+    await ctx.send(sender, ChatMessage([TextContent(text="hi")]))
+    return
     ctx.logger.info("Received msg")
+    user_id = sender
 
     # Store incoming user message
     for item in msg.content:
@@ -29,15 +33,6 @@ async def handle_message(ctx: Context, sender: str, msg: ChatMessage):
             append_message_to_history(ctx=ctx, chat_id=sender, message=item.text)
             ctx.logger.info(f"Stored message from {sender}: {item.text}")
 
-
-# This is needed to be compliant with AgentVerse's chat protocol
-@chat_proto.on_message(ChatAcknowledgement)
-async def handle_ack(ctx: Context, sender: str, msg: ChatAcknowledgement):
-    await ctx.send(
-        sender,
-        ChatAcknowledgement(timestamp=datetime.now(), acknowledged_msg_id=msg.msg_id),
-    )
-    user_id = sender
 
     # Retrieve message history for this user
     messages = get_message_history(ctx=ctx, chat_id=user_id)
@@ -62,4 +57,13 @@ async def handle_ack(ctx: Context, sender: str, msg: ChatAcknowledgement):
             await ctx.send(sender, ChatMessage(content=[TextContent(text=msg)]))
         case _:
             await ctx.send(sender, ChatMessage(content=[TextContent(text="Sorry, I can only help you order a coffee. Try choosing something from the menu or ask me for the menu!")]))
+
+
+# This is needed to be compliant with AgentVerse's chat protocol
+@chat_proto.on_message(ChatAcknowledgement)
+async def handle_ack(ctx: Context, sender: str, msg: ChatAcknowledgement):
+    await ctx.send(
+        sender,
+        ChatAcknowledgement(timestamp=datetime.now(), acknowledged_msg_id=msg.msg_id),
+    )
             
