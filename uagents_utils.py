@@ -22,33 +22,66 @@ def user_has_ordered(ctx: Context, user_id: str) -> bool:
     return ctx.storage.get(_get_user_orderd_key(user_id))
 
 
-# TODO
-def classify_intent(chat_history: any) -> Intent:
+def classify_intent(chat_history: list) -> Intent:
     """
-    TODO: Classify the user's intent from the chat history.
-    
-    This function is a placeholder and needs to be implemented. We don't know how
-    the developer API will work yet. Developers should look into the implementation
-    and get back to the team with their findings.
-    
-    If the intent cannot be determined from the chat history, this function should
-    return Intent.UNKNOWN as a fallback.
-    
+    Classify the user's intent from the chat history.
+
+    This function analyzes the chat history (most recent messages first) to determine
+    the user's intent using keyword matching patterns.
+
     Args:
-        chat_history: The chat history containing user messages (format TBD)
-    
+        chat_history: List of message strings from the chat
+
     Returns:
         Intent enum value indicating the user's intent:
-        - Intent.WANT_TO_ORDER: User expresses interest in ordering (e.g., asking to see menu, 
+        - Intent.WANT_TO_ORDER: User expresses interest in ordering (e.g., asking to see menu,
           browsing items, but not yet ready to place an order)
-        - Intent.PLACE_ORDER: User wants to actually place/complete an order (e.g., confirming 
+        - Intent.PLACE_ORDER: User wants to actually place/complete an order (e.g., confirming
           selection, requesting order completion)
         - Intent.UNKNOWN: Fallback when intent cannot be determined from chat history
-    
-    Note:
-        This is a TODO item. Implementation details need to be researched and discussed with the team.
     """
-    pass
+    if not chat_history:
+        return Intent.UNKNOWN
+
+    # Keywords that indicate user wants to PLACE a specific order (needs item reference)
+    place_order_keywords = [
+        "take", "have", "get", "order", "buy", "purchase", "give", "want"
+    ]
+
+    # Item reference indicators (numbers or ordinals)
+    item_indicators = [
+        "1", "2", "3", "#1", "#2", "#3",
+        "one", "two", "three",
+        "first", "second", "third",
+        "1st", "2nd", "3rd",
+        "item", "number", "option"
+    ]
+
+    # Keywords that indicate user wants to SEE the menu or browse
+    want_to_order_keywords = [
+        "menu", "options", "choices", "available", "offer", "list",
+        "show", "see", "view", "browse", "display",
+        "what", "which", "any",
+        "help", "assist", "recommend", "suggestion",
+        "coffee", "drink", "drinks", "beverage"
+    ]
+
+    # Process messages from most recent to oldest
+    for message in reversed(chat_history):
+        message_lower = message.lower().strip()
+
+        # Check for PLACE_ORDER: needs both an action keyword AND an item indicator
+        has_action = any(keyword in message_lower for keyword in place_order_keywords)
+        has_item = any(indicator in message_lower for indicator in item_indicators)
+
+        if has_action and has_item:
+            return Intent.PLACE_ORDER
+
+        # Check for WANT_TO_ORDER: just needs browsing/menu keywords
+        if any(keyword in message_lower for keyword in want_to_order_keywords):
+            return Intent.WANT_TO_ORDER
+
+    return Intent.UNKNOWN
 
 def get_requested_menu_item_number(chat_history: list) -> int:
     """
