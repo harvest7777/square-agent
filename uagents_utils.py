@@ -1,128 +1,25 @@
-from enum import Enum
-from uagents import Context
 import re
-import os
-from openai import OpenAI
-from dotenv import load_dotenv
+from uagents import Context
 
-load_dotenv()
+from intent import Intent
+from intent_examples import SIMILARITY_THRESHOLD
+from embedding_utils import get_embedding, cosine_similarity, get_intent_embeddings
 
-# Initialize OpenAI client - API key will be loaded from environment
-# Set OPENAI_API_KEY in your .env file
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# Embedding model to use
-EMBEDDING_MODEL = "text-embedding-3-small"
-
-# Example phrases for each intent (used for semantic matching)
-INTENT_EXAMPLES = {
-    "PLACE_ORDER": [
-        "I'll take item 1",
-        "Give me the second one",
-        "I want number 2",
-        "Order the first item please",
-        "Can I get item 3",
-        "I'd like to have the third option",
-        "Let me get number one",
-        "I'll have the second drink",
-        "Put in an order for item 2",
-        "I want to buy the first one",
-    ],
-    "WANT_TO_ORDER": [
-        "Show me the menu",
-        "What do you have",
-        "What's available",
-        "I want to order something",
-        "What are my options",
-        "Can I see what you offer",
-        "What drinks do you have",
-        "Help me order",
-        "I'm interested in ordering",
-        "What can I get here",
-    ],
-}
-
-# Similarity threshold - below this returns UNKNOWN
-SIMILARITY_THRESHOLD = 0.3
-
-# Cache for intent example embeddings (computed once)
-_intent_embeddings_cache = {}
-
-class Intent(str, Enum):
-    """Intent enum for user actions."""
-    WANT_TO_ORDER = "want to order"
-    PLACE_ORDER = "place order"
-    UNKNOWN = "unknown"  # Fallback when intent cannot be determined
 
 def _get_user_orderd_key(user_id: str) -> str:
     return f"ordered-{user_id}"
 
+
 def _get_message_history_key(chat_id: str) -> str:
     return f"message-history-{chat_id}"
+
 
 def mark_user_as_ordered(ctx: Context, user_id: str) -> None:
     ctx.storage.set(_get_user_orderd_key(user_id), True)
 
+
 def user_has_ordered(ctx: Context, user_id: str) -> bool:
     return ctx.storage.get(_get_user_orderd_key(user_id))
-
-
-def _get_embedding(text: str) -> list:
-    """
-    Get the embedding vector for a text string using OpenAI's embedding model.
-
-    Args:
-        text: The text to embed
-
-    Returns:
-        List of floats representing the embedding vector
-    """
-    text = text.replace("\n", " ").strip()
-    response = openai_client.embeddings.create(
-        input=[text],
-        model=EMBEDDING_MODEL
-    )
-    return response.data[0].embedding
-
-
-def _cosine_similarity(vec1: list, vec2: list) -> float:
-    """
-    Compute cosine similarity between two vectors.
-
-    Args:
-        vec1: First embedding vector
-        vec2: Second embedding vector
-
-    Returns:
-        Cosine similarity score between -1 and 1
-    """
-    dot_product = sum(a * b for a, b in zip(vec1, vec2))
-    magnitude1 = sum(a * a for a in vec1) ** 0.5
-    magnitude2 = sum(b * b for b in vec2) ** 0.5
-
-    if magnitude1 == 0 or magnitude2 == 0:
-        return 0.0
-
-    return dot_product / (magnitude1 * magnitude2)
-
-
-def _get_intent_embeddings() -> dict:
-    """
-    Get or compute embeddings for all intent examples.
-    Results are cached to avoid repeated API calls.
-
-    Returns:
-        Dictionary mapping intent names to lists of embedding vectors
-    """
-    global _intent_embeddings_cache
-
-    if not _intent_embeddings_cache:
-        for intent_name, examples in INTENT_EXAMPLES.items():
-            _intent_embeddings_cache[intent_name] = [
-                _get_embedding(example) for example in examples
-            ]
-
-    return _intent_embeddings_cache
 
 
 def classify_intent(chat_history: list) -> Intent:
@@ -135,7 +32,7 @@ def classify_intent(chat_history: list) -> Intent:
     2. Convert it to an embedding
     3. For each intent, compare user embedding to each example and take best score
     4. Pick the intent with the highest score
-    5. If score < threshold → UNKNOWN
+    5. If score < threshold -> UNKNOWN
 
     Args:
         chat_history: List of message strings from the chat
@@ -159,10 +56,10 @@ def classify_intent(chat_history: list) -> Intent:
 
     try:
         # Get embedding for the user's message
-        user_embedding = _get_embedding(latest_message)
+        user_embedding = get_embedding(latest_message)
 
         # Get cached embeddings for intent examples
-        intent_embeddings = _get_intent_embeddings()
+        intent_embeddings = get_intent_embeddings()
 
         # Calculate best similarity score for each intent
         intent_scores = {}
@@ -170,7 +67,7 @@ def classify_intent(chat_history: list) -> Intent:
         for intent_name, example_embeddings in intent_embeddings.items():
             # Find the highest similarity score among all examples for this intent
             best_score = max(
-                _cosine_similarity(user_embedding, example_emb)
+                cosine_similarity(user_embedding, example_emb)
                 for example_emb in example_embeddings
             )
             intent_scores[intent_name] = best_score
@@ -196,6 +93,7 @@ def classify_intent(chat_history: list) -> Intent:
         print(f"Error in classify_intent: {e}")
         return Intent.UNKNOWN
 
+
 def get_requested_menu_item_number(chat_history: list) -> int:
     """
     Extract the menu item number that the user requested from the chat history.
@@ -215,8 +113,6 @@ def get_requested_menu_item_number(chat_history: list) -> int:
     Raises:
         ValueError: If unable to determine what menu item the user was trying to order
     """
-
-    # Maybe we can do llama index for this
     # Word to number mapping for ordinal references
     word_to_number = {
         "first": 1, "one": 1, "1st": 1,
@@ -254,6 +150,7 @@ def get_requested_menu_item_number(chat_history: list) -> int:
 
     raise ValueError("Unable to determine the requested menu item from chat history")
 
+
 def get_message_history(ctx: Context, chat_id: str) -> list:
     """
     Retrieve the message history for a particular chat ID.
@@ -267,6 +164,7 @@ def get_message_history(ctx: Context, chat_id: str) -> list:
     """
     history = ctx.storage.get(_get_message_history_key(chat_id))
     return history if history is not None else []
+
 
 def append_message_to_history(ctx: Context, chat_id: str, message: str) -> None:
     """
