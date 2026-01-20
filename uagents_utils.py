@@ -1,7 +1,52 @@
 from enum import Enum
 from uagents import Context
 import re
+import os
+from openai import OpenAI
+from dotenv import load_dotenv
 
+load_dotenv()
+
+# Initialize OpenAI client - API key will be loaded from environment
+# Set OPENAI_API_KEY in your .env file
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Embedding model to use
+EMBEDDING_MODEL = "text-embedding-3-small"
+
+# Example phrases for each intent (used for semantic matching)
+INTENT_EXAMPLES = {
+    "PLACE_ORDER": [
+        "I'll take item 1",
+        "Give me the second one",
+        "I want number 2",
+        "Order the first item please",
+        "Can I get item 3",
+        "I'd like to have the third option",
+        "Let me get number one",
+        "I'll have the second drink",
+        "Put in an order for item 2",
+        "I want to buy the first one",
+    ],
+    "WANT_TO_ORDER": [
+        "Show me the menu",
+        "What do you have",
+        "What's available",
+        "I want to order something",
+        "What are my options",
+        "Can I see what you offer",
+        "What drinks do you have",
+        "Help me order",
+        "I'm interested in ordering",
+        "What can I get here",
+    ],
+}
+
+# Similarity threshold - below this returns UNKNOWN
+SIMILARITY_THRESHOLD = 0.3
+
+# Cache for intent example embeddings (computed once)
+_intent_embeddings_cache = {}
 
 class Intent(str, Enum):
     """Intent enum for user actions."""
@@ -18,16 +63,79 @@ def _get_message_history_key(chat_id: str) -> str:
 def mark_user_as_ordered(ctx: Context, user_id: str) -> None:
     ctx.storage.set(_get_user_orderd_key(user_id), True)
 
-def user_has_ordered(ctx: Context, user_id: str) -> bool: 
+def user_has_ordered(ctx: Context, user_id: str) -> bool:
     return ctx.storage.get(_get_user_orderd_key(user_id))
+
+
+def _get_embedding(text: str) -> list:
+    """
+    Get the embedding vector for a text string using OpenAI's embedding model.
+
+    Args:
+        text: The text to embed
+
+    Returns:
+        List of floats representing the embedding vector
+    """
+    text = text.replace("\n", " ").strip()
+    response = openai_client.embeddings.create(
+        input=[text],
+        model=EMBEDDING_MODEL
+    )
+    return response.data[0].embedding
+
+
+def _cosine_similarity(vec1: list, vec2: list) -> float:
+    """
+    Compute cosine similarity between two vectors.
+
+    Args:
+        vec1: First embedding vector
+        vec2: Second embedding vector
+
+    Returns:
+        Cosine similarity score between -1 and 1
+    """
+    dot_product = sum(a * b for a, b in zip(vec1, vec2))
+    magnitude1 = sum(a * a for a in vec1) ** 0.5
+    magnitude2 = sum(b * b for b in vec2) ** 0.5
+
+    if magnitude1 == 0 or magnitude2 == 0:
+        return 0.0
+
+    return dot_product / (magnitude1 * magnitude2)
+
+
+def _get_intent_embeddings() -> dict:
+    """
+    Get or compute embeddings for all intent examples.
+    Results are cached to avoid repeated API calls.
+
+    Returns:
+        Dictionary mapping intent names to lists of embedding vectors
+    """
+    global _intent_embeddings_cache
+
+    if not _intent_embeddings_cache:
+        for intent_name, examples in INTENT_EXAMPLES.items():
+            _intent_embeddings_cache[intent_name] = [
+                _get_embedding(example) for example in examples
+            ]
+
+    return _intent_embeddings_cache
 
 
 def classify_intent(chat_history: list) -> Intent:
     """
-    Classify the user's intent from the chat history.
+    Classify the user's intent from the chat history using semantic search.
 
-    This function analyzes the chat history (most recent messages first) to determine
-    the user's intent using keyword matching patterns.
+    This function uses OpenAI embeddings to semantically match the user's message
+    against example phrases for each intent. The workflow:
+    1. Get the user's latest message
+    2. Convert it to an embedding
+    3. For each intent, compare user embedding to each example and take best score
+    4. Pick the intent with the highest score
+    5. If score < threshold → UNKNOWN
 
     Args:
         chat_history: List of message strings from the chat
@@ -43,45 +151,50 @@ def classify_intent(chat_history: list) -> Intent:
     if not chat_history:
         return Intent.UNKNOWN
 
-    # Keywords that indicate user wants to PLACE a specific order (needs item reference)
-    place_order_keywords = [
-        "take", "have", "get", "order", "buy", "purchase", "give", "want"
-    ]
+    # Get the most recent message from the user
+    latest_message = chat_history[-1].strip()
 
-    # Item reference indicators (numbers or ordinals)
-    item_indicators = [
-        "1", "2", "3", "#1", "#2", "#3",
-        "one", "two", "three",
-        "first", "second", "third",
-        "1st", "2nd", "3rd",
-        "item", "number", "option"
-    ]
+    if not latest_message:
+        return Intent.UNKNOWN
 
-    # Keywords that indicate user wants to SEE the menu or browse
-    want_to_order_keywords = [
-        "menu", "options", "choices", "available", "offer", "list",
-        "show", "see", "view", "browse", "display",
-        "what", "which", "any",
-        "help", "assist", "recommend", "suggestion",
-        "coffee", "drink", "drinks", "beverage"
-    ]
+    try:
+        # Get embedding for the user's message
+        user_embedding = _get_embedding(latest_message)
 
-    # Process messages from most recent to oldest
-    for message in reversed(chat_history):
-        message_lower = message.lower().strip()
+        # Get cached embeddings for intent examples
+        intent_embeddings = _get_intent_embeddings()
 
-        # Check for PLACE_ORDER: needs both an action keyword AND an item indicator
-        has_action = any(keyword in message_lower for keyword in place_order_keywords)
-        has_item = any(indicator in message_lower for indicator in item_indicators)
+        # Calculate best similarity score for each intent
+        intent_scores = {}
 
-        if has_action and has_item:
-            return Intent.PLACE_ORDER
+        for intent_name, example_embeddings in intent_embeddings.items():
+            # Find the highest similarity score among all examples for this intent
+            best_score = max(
+                _cosine_similarity(user_embedding, example_emb)
+                for example_emb in example_embeddings
+            )
+            intent_scores[intent_name] = best_score
 
-        # Check for WANT_TO_ORDER: just needs browsing/menu keywords
-        if any(keyword in message_lower for keyword in want_to_order_keywords):
-            return Intent.WANT_TO_ORDER
+        # Find the intent with the highest score
+        best_intent = max(intent_scores, key=intent_scores.get)
+        best_score = intent_scores[best_intent]
 
-    return Intent.UNKNOWN
+        # If best score is below threshold, return UNKNOWN
+        if best_score < SIMILARITY_THRESHOLD:
+            return Intent.UNKNOWN
+
+        # Map intent name to Intent enum
+        intent_mapping = {
+            "PLACE_ORDER": Intent.PLACE_ORDER,
+            "WANT_TO_ORDER": Intent.WANT_TO_ORDER,
+        }
+
+        return intent_mapping.get(best_intent, Intent.UNKNOWN)
+
+    except Exception as e:
+        # If embedding fails (API error, etc.), fall back to UNKNOWN
+        print(f"Error in classify_intent: {e}")
+        return Intent.UNKNOWN
 
 def get_requested_menu_item_number(chat_history: list) -> int:
     """
