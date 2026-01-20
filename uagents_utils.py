@@ -1,9 +1,8 @@
-import re
 from uagents import Context
 
 from intent import Intent
-from intent_examples import SIMILARITY_THRESHOLD
-from embedding_utils import get_embedding, cosine_similarity, get_intent_embeddings
+from intent_examples import SIMILARITY_THRESHOLD, MENU_ITEM_SIMILARITY_THRESHOLD
+from embedding_utils import get_embedding, cosine_similarity, get_intent_embeddings, get_menu_item_embeddings
 
 
 def _get_user_orderd_key(user_id: str) -> str:
@@ -96,13 +95,15 @@ def classify_intent(chat_history: list) -> Intent:
 
 def get_requested_menu_item_number(chat_history: list) -> int:
     """
-    Extract the menu item number that the user requested from the chat history.
+    Extract the menu item number that the user requested from the chat history using semantic search.
 
-    This function parses through the chat history (most recent first) and looks for
-    menu item numbers using pattern matching. It supports various formats:
-    - Direct numbers: "1", "2", "3"
-    - Item references: "item 1", "number 2", "#3"
-    - Ordinal words: "first", "second", "third"
+    This function uses OpenAI embeddings to semantically match the user's message
+    against example phrases for each menu item. The workflow:
+    1. Get the user's latest message
+    2. Convert it to an embedding
+    3. For each menu item, compare user embedding to each example and take best score
+    4. Pick the menu item with the highest score
+    5. If score < threshold -> raise ValueError
 
     Args:
         chat_history: List of message strings from the chat
@@ -113,42 +114,50 @@ def get_requested_menu_item_number(chat_history: list) -> int:
     Raises:
         ValueError: If unable to determine what menu item the user was trying to order
     """
-    # Word to number mapping for ordinal references
-    word_to_number = {
-        "first": 1, "one": 1, "1st": 1,
-        "second": 2, "two": 2, "2nd": 2,
-        "third": 3, "three": 3, "3rd": 3,
-    }
+    if not chat_history:
+        raise ValueError("Unable to determine the requested menu item from chat history")
 
-    # Valid menu item numbers (1, 2, 3 based on MENU_ITEMS)
-    valid_items = {1, 2, 3}
+    # Get the most recent message from the user
+    latest_message = chat_history[-1].strip()
 
-    # Process messages from most recent to oldest
-    for message in reversed(chat_history):
-        message_lower = message.lower()
+    if not latest_message:
+        raise ValueError("Unable to determine the requested menu item from chat history")
 
-        # Check for ordinal words first
-        for word, number in word_to_number.items():
-            if word in message_lower:
-                return number
+    try:
+        # Get embedding for the user's message
+        user_embedding = get_embedding(latest_message)
 
-        # Pattern to match item references like "item 1", "number 2", "#3", or standalone digits
-        patterns = [
-            r'item\s*(\d+)',      # "item 1", "item1"
-            r'number\s*(\d+)',    # "number 2", "number2"
-            r'#(\d+)',            # "#3"
-            r'option\s*(\d+)',    # "option 1"
-            r'\b(\d+)\b',         # standalone digit
-        ]
+        # Get cached embeddings for menu item examples
+        menu_item_embeddings = get_menu_item_embeddings()
 
-        for pattern in patterns:
-            match = re.search(pattern, message_lower)
-            if match:
-                item_number = int(match.group(1))
-                if item_number in valid_items:
-                    return item_number
+        # Calculate best similarity score for each menu item
+        item_scores = {}
 
-    raise ValueError("Unable to determine the requested menu item from chat history")
+        for item_number, example_embeddings in menu_item_embeddings.items():
+            # Find the highest similarity score among all examples for this item
+            best_score = max(
+                cosine_similarity(user_embedding, example_emb)
+                for example_emb in example_embeddings
+            )
+            item_scores[item_number] = best_score
+
+        # Find the menu item with the highest score
+        best_item = max(item_scores, key=item_scores.get)
+        best_score = item_scores[best_item]
+
+        # If best score is below threshold, raise error
+        if best_score < MENU_ITEM_SIMILARITY_THRESHOLD:
+            raise ValueError("Unable to determine the requested menu item from chat history")
+
+        return best_item
+
+    except ValueError:
+        # Re-raise ValueError as-is
+        raise
+    except Exception as e:
+        # If embedding fails (API error, etc.), raise ValueError
+        print(f"Error in get_requested_menu_item_number: {e}")
+        raise ValueError("Unable to determine the requested menu item from chat history")
 
 
 def get_message_history(ctx: Context, chat_id: str) -> list:
