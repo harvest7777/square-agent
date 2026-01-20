@@ -11,7 +11,8 @@ from uagents_core.contrib.protocols.chat import (
 
 from menu import MENU_ITEMS, get_menu
 from square_utils import place_order
-from uagents_utils import Intent, classify_intent, get_message_history, get_requested_menu_item_number, mark_user_as_ordered, user_has_ordered, append_message_to_history
+from intent import Intent
+from uagents_utils import classify_intent, get_message_history, get_requested_menu_item_number, mark_user_as_ordered, user_has_ordered, append_message_to_history
 
 chat_proto = Protocol(spec=chat_protocol_spec)
 
