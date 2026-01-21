@@ -1,0 +1,7 @@
+1. Get the user's latest message
+2. Convert it to an embedding
+3. For each intent:
+    a. Compare user embedding to each example
+    b. Take the best similarity score
+4. Pick the intent with the highest score
+5. If score < threshold → UNKNOWN
