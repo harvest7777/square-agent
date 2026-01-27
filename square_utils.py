@@ -124,6 +124,9 @@ def place_order(variation_id: str, idempotency_key: str = None) -> None:
     if response.errors:
         raise Exception(f"Failed to place order: {response.errors}")
     
+    order_id = response.order.id
+    print(f"Order placed successfully! Order ID: {order_id}")
+    
 # catalog_ids = ["CYUVQKK4G4YJZCX26GISIU5A","3YGHZQN4A4N5W2TFGNKBPF47","A54LFYWWYJYZJ7DIAU2AXDIW"]
 # for c in catalog_ids:
 #     print(_getVariationInfoFromItemId(c))

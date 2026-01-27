@@ -23,9 +23,6 @@ async def handle_message(ctx: Context, sender: str, msg: ChatMessage):
         ChatAcknowledgement(timestamp=datetime.now(), acknowledged_msg_id=msg.msg_id),
     )
 
-    await ctx.send(sender, ChatMessage([TextContent(text="hi")]))
-    return
-    ctx.logger.info("Received msg")
     user_id = sender
 
     # Store incoming user message
@@ -38,25 +35,34 @@ async def handle_message(ctx: Context, sender: str, msg: ChatMessage):
     # Retrieve message history for this user
     messages = get_message_history(ctx=ctx, chat_id=user_id)
     ctx.logger.info(f"Retrieved {len(messages)} messages for user {user_id}")
+    ctx.logger.info(messages)
 
     # Order flow
     intent: Intent = classify_intent(chat_history=messages)
+    ctx.logger.info(intent)
 
     match (intent):
         case Intent.PLACE_ORDER:
-            if user_has_ordered(ctx=ctx, user_id=user_id):
+            ctx.logger.info("Matched case: Intent.PLACE_ORDER")
+            # if user_has_ordered(ctx=ctx, user_id=user_id):
+            if False:
                 await ctx.send(sender, ChatMessage(content=[TextContent(text="Sorry! Only one per person for promotional event")]))
             else:
+                await ctx.send(sender, ChatMessage(content=[TextContent(text="Your order has been placed! Thank you!")]))
                 menu_item_number = get_requested_menu_item_number(chat_history=messages)
                 variation_id = MENU_ITEMS[menu_item_number]
                 place_order(variation_id=variation_id, idempotency_key=str(uuid4()))
                 mark_user_as_ordered(ctx=ctx, user_id=user_id)
-                await ctx.send(sender, ChatMessage(content=[TextContent(text="Your order has been placed! Thank you!")]))
         case Intent.WANT_TO_ORDER:
+            ctx.logger.info("Matched case: Intent.WANT_TO_ORDER")
             menu = get_menu()
-            msg = "Thanks for coming to the promotional Fetch-A-Coffee event! Please select something from the menu below\n" + menu
+            msg = f"""Thanks for coming to the promotional Fetch-A-Coffee event! Please select something from the menu below
+
+            
+{menu}"""
             await ctx.send(sender, ChatMessage(content=[TextContent(text=msg)]))
         case _:
+            ctx.logger.info("Matched case: Intent._ (default case)")
             await ctx.send(sender, ChatMessage(content=[TextContent(text="Sorry, I can only help you order a coffee. Try choosing something from the menu or ask me for the menu!")]))
 
 
