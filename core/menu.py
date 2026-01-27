@@ -1,4 +1,4 @@
-from square_utils import _get_prety_menu_string_from_variation_id
+from services.square_utils import _get_prety_menu_string_from_variation_id
 
 # MENU_ITEMS is the canonical truth for what items people can order.
 # Each entry maps a menu number to a Square catalog variation ID.
@@ -11,7 +11,7 @@ MENU_ITEMS = {
 def get_menu() -> str:
     """
     Retrieve and format the menu using hardcoded menu items.
-    
+
     Returns:
         Formatted menu string with numbered items and header
     """
@@ -19,12 +19,17 @@ def get_menu() -> str:
     for menu_number, variation_id in MENU_ITEMS.items():
         pretty_item = _get_prety_menu_string_from_variation_id(variation_id).strip()
         menu_items.append(pretty_item)
-    
+
     # Format as numbered list with header
     menu = "=======MENU=======\n"
     for i, item in enumerate(menu_items, start=1):
         menu += f"{i}. {item}\n"
+<<<<<<< HEAD:menu.py
     
     return menu
 
 print(get_menu())
+=======
+
+    return menu
+>>>>>>> 197aba5b8b2084c610f3eb633c9d5a85807c50de:core/menu.py

@@ -1,10 +1,10 @@
-from square_utils import (
+from services.square_utils import (
     _format_cents,
     _get_prety_menu_string_from_variation_id,
     _get_variation_info_from_item_id,
     place_order
 )
-from menu import get_menu, MENU_ITEMS
+from core.menu import get_menu, MENU_ITEMS
 
 def test_format_cents():
     print("=== Testing _format_cents ===")

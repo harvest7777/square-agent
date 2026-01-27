@@ -1,7 +1,7 @@
 from uagents import Agent
 from uagents.setup import fund_agent_if_low
 from dotenv import load_dotenv
-from chat_proto import chat_proto
+from protocols.chat_proto import chat_proto
 import os
 
 load_dotenv()

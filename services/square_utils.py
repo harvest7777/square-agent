@@ -19,10 +19,10 @@ client = Square(
 def _format_cents(cents: int) -> str:
     """
     Convert cents to a formatted USD currency string.
-    
+
     Args:
         cents: Integer value representing the amount in cents (e.g., 1000 for $10.00)
-    
+
     Returns:
         Formatted currency string with dollar sign and two decimal places (e.g., "$10.00")
     """
@@ -40,7 +40,7 @@ def _get_prety_menu_string_from_variation_id(variation_id: str) -> str:
 
     # Get the item name this variation is derived from
     # Ex: variation is eispanner, base item is matcha
-    # We want to be able to display matcha - honey oat 
+    # We want to be able to display matcha - honey oat
     base_item_id = response.object.item_variation_data.item_id
     base_item_name = client.catalog.object.get(object_id=base_item_id).object.item_data.name
 
@@ -53,14 +53,14 @@ def _get_prety_menu_string_from_variation_id(variation_id: str) -> str:
 def _get_variation_info_from_item_id(item_id: str) -> str:
     """
     Developer utility function to retrieve and display item variation information.
-    
+
     This function is intended for developers only to help identify which item variations
     to hardcode in the application. It displays the real-world correlation of each variation,
     including the price, name, variation ID, and how it should appear on the menu.
-    
+
     Args:
         item_id: The catalog object ID for the item whose variations should be retrieved
-    
+
     Returns:
         Formatted string containing all variations with their prices, names, and IDs
     """
@@ -80,7 +80,7 @@ def _get_variation_info_from_item_id(item_id: str) -> str:
         pretty_item = f"{item_name} - {name}: {_format_cents(price)} [Variation ID: {variation_id}] \n"
         pretty_menu += pretty_item
     return pretty_menu
-    
+
 
 def place_order(variation_id: str, idempotency_key: str = None) -> None:
     """
