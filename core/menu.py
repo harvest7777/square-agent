@@ -24,12 +24,6 @@ def get_menu() -> str:
     menu = "=======MENU=======\n"
     for i, item in enumerate(menu_items, start=1):
         menu += f"{i}. {item}\n"
-<<<<<<< HEAD:menu.py
     
     return menu
 
-print(get_menu())
-=======
-
-    return menu
->>>>>>> 197aba5b8b2084c610f3eb633c9d5a85807c50de:core/menu.py
