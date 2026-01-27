@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from intent_examples import INTENT_EXAMPLES, MENU_ITEM_EXAMPLES
+from core.intent_examples import INTENT_EXAMPLES, MENU_ITEM_EXAMPLES
 
 load_dotenv()
 

@@ -1,8 +1,8 @@
 from uagents import Context
 
-from intent import Intent
-from intent_examples import SIMILARITY_THRESHOLD, MENU_ITEM_SIMILARITY_THRESHOLD
-from embedding_utils import get_embedding, cosine_similarity, get_intent_embeddings, get_menu_item_embeddings
+from core.intent import Intent
+from core.intent_examples import SIMILARITY_THRESHOLD, MENU_ITEM_SIMILARITY_THRESHOLD
+from services.embedding_utils import get_embedding, cosine_similarity, get_intent_embeddings, get_menu_item_embeddings
 
 
 def _get_user_orderd_key(user_id: str) -> str:
