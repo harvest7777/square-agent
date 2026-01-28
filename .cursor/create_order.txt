@@ -302,7 +302,7 @@ A screenshot showing the Sandbox test accounts page in the Developer Console.
 Calculate an order
 The CalculateOrder endpoint allows applications to preview prices without creating an order. For example, Square Virtual Terminal uses this endpoint in the application flow to show a purchase total to the buyer without creating an actual order.
 
-Purchase total previews are also useful when applications integrate advanced pricing components, such as rewards and discounts. For example, an eCommerce application might integrate a Square loyalty program to offer buyer loyalty discounts. The application can use the CalculateOrder endpoint to show buyers a preview of applying loyalty points to their orders without locking loyalty points until the buyers are ready to pay for the orders.
+Purchase total previews are also useful when applications integrate advanced pricing components, such as rewards and discounts. For example, an eCommerce application might integrate a Square loyalty program to offer buyer loyalty discounts. The application can use the CalculateOrder endpoint to show buyers a preview of applying loyalty points to their orders without locking loyalty points until the buyers are ready to pay for the graph.
 
 In the CalculateOrder request, provide the following:
 

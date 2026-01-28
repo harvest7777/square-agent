@@ -91,7 +91,7 @@ def place_order(variation_id: str, idempotency_key: str = None) -> None:
 
     Args:
         variation_id: The Square catalog variation ID for the item to order
-        idempotency_key: Optional unique key to prevent duplicate orders. If not provided,
+        idempotency_key: Optional unique key to prevent duplicate graph. If not provided,
                         a new UUID will be generated. To prevent duplicates on page refresh,
                         provide a consistent key for the same order attempt.
 
@@ -108,7 +108,7 @@ def place_order(variation_id: str, idempotency_key: str = None) -> None:
         raise Exception("No locations found for this Square account")
     location_id = locations_response.locations[0].id
 
-    response = client.orders.create(
+    response = client.graph.create(
         idempotency_key=idempotency_key,
         order={
             "location_id": location_id,

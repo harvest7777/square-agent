@@ -9,7 +9,7 @@ In the following example, you can see how the idempotency_key is generated in a 
 
 
 
-client.orders.create(
+client.graph.create(
     idempotency_key=str(uuid.uuid4()),
     order={
         "location_id": location.id
