@@ -1,12 +1,49 @@
 from graph.state import OrderState
+from services.llm_client import client
+
+VALID_INTENTS = ["view_menu", "add_item", "view_cart", "confirm", "cancel", "help", "unknown"]
+
+INTENT_DETECTION_PROMPT = """You are an intent classifier for a food ordering assistant. Analyze the user's message and classify it into exactly one of the following intents:
+
+INTENTS:
+- view_menu: User wants to see available items, browse options, or ask what food/drinks are available.
+  Examples: "What's on the menu?", "Show me your options", "What do you have?", "What can I order?"
+
+- add_item: User wants to add a specific item to their order or express desire for a food/drink item.
+  Examples: "I'll have a burger", "Add a coffee please", "Can I get fries?", "I want a salad", "Give me two pizzas"
+
+- view_cart: User wants to see what's currently in their order/cart or review their selections.
+  Examples: "What's in my cart?", "Show my order", "What did I order?", "Review my items"
+
+- confirm: User is ready to finalize, checkout, or complete their order.
+  Examples: "That's all", "I'm done", "Checkout please", "Confirm my order", "Place the order", "Submit"
+
+- cancel: User wants to cancel their order, clear the cart, or start over.
+  Examples: "Cancel my order", "Never mind", "Forget it", "Clear everything", "Start over"
+
+- help: User needs assistance, has questions about how to use the system, or is confused.
+  Examples: "How does this work?", "Help me", "I'm confused", "What can you do?"
+
+- unknown: The message doesn't clearly fit any of the above intents or is unrelated to ordering.
+  Examples: "Hello", "What's the weather?", random text, gibberish
+
+INSTRUCTIONS:
+- Respond with ONLY the intent name (e.g., "add_item")
+- Choose the single most likely intent based on the user's message
+- If the message contains both a question and an order, prioritize the order (add_item)
+- When in doubt between intents, prefer "unknown" over guessing
+
+User message: {user_input}
+
+Intent:"""
 
 
 def detect_intent(user_input: str) -> str:
     """
-    Hardcoded intent detection based on keywords.
+    LLM-based intent detection using OpenAI.
 
-    In a real app, this would be replaced with an LLM call that can
-    understand context and nuance. For now, simple keyword matching.
+    Analyzes user input to determine their intent in the context of
+    a food ordering system.
 
     Returns one of:
         - "view_menu": User wants to see the menu
@@ -17,29 +54,31 @@ def detect_intent(user_input: str) -> str:
         - "help": User needs help
         - "unknown": Couldn't determine intent
     """
-    text = user_input.lower()
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "user",
+                    "content": INTENT_DETECTION_PROMPT.format(user_input=user_input)
+                }
+            ],
+            max_tokens=20,
+            temperature=0
+        )
 
-    # Order matters - check more specific patterns first
+        intent = response.choices[0].message.content.strip().lower()
 
-    if any(word in text for word in ["menu", "options", "what do you have", "what's available"]):
-        return "view_menu"
+        # Validate the intent is one of our expected values
+        if intent in VALID_INTENTS:
+            return intent
 
-    if any(word in text for word in ["cart", "my order", "what did i", "show order"]):
-        return "view_cart"
+        return "unknown"
 
-    if any(word in text for word in ["add", "order", "want", "get", "i'll have", "give me"]):
-        return "add_item"
-
-    if any(word in text for word in ["confirm", "checkout", "done", "that's all", "place order", "submit"]):
-        return "confirm"
-
-    if any(word in text for word in ["cancel", "nevermind", "forget it", "clear", "start over"]):
-        return "cancel"
-
-    if any(word in text for word in ["help", "how do i", "?"]):
-        return "help"
-
-    return "unknown"
+    except Exception as e:
+        # Fallback to unknown on any error
+        print(f"Intent detection error: {e}")
+        return "unknown"
 
 
 def classify_intent(state: OrderState) -> dict:
