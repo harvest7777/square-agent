@@ -1,0 +1,350 @@
+POST/oauth2/token
+Obtain token
+Returns an OAuth access token and refresh token using the authorization_code or refresh_token grant type
+
+
+Search developer resources
+/
+Docs & Tools
+SDKs
+Support
+Partnerships
+Sign In
+
+OAuth
+
+Authorize
+
+Revoke token
+
+Obtain token
+
+Retrieve token status
+
+Webhooks
+
+oauth.authorization.revoked
+
+
+OAuth API
+
+Obtain token
+POST
+
+ /oauth2/token
+
+Returns an OAuth access token and refresh token using the authorization_code or refresh_token grant type.
+
+When grant_type is authorization_code:
+
+With the code flow, provide code, client_id, and client_secret.
+With the PKCE flow, provide code, client_id, and code_verifier.
+When grant_type is refresh_token:
+
+With the code flow, provide refresh_token, client_id, and client_secret. The response returns the same refresh token provided in the request.
+With the PKCE flow, provide refresh_token and client_id. The response returns a new refresh token.
+You can use the scopes parameter to limit the set of permissions authorized by the access token. You can use the short_lived parameter to create an access token that expires in 24 hours.
+
+Important: OAuth tokens should be encrypted and stored on a secure server. Application clients should never interact directly with OAuth tokens.
+
+Guide
+
+Receive Seller Authorization and Manage Seller OAuth Tokens
+
+Try in API Explorer
+Request body
+client_id
+
+string
+
+Required
+
+The Square-issued ID of your application, which is available as the Application ID on the OAuth page in the Developer Console.
+
+Required for the code flow and PKCE flow for any grant type.
+
+Max Length
+191
+client_secret
+
+string
+
+The secret key for your application, which is available as the Application secret on the OAuth page in the Developer Console.
+
+Required for the code flow for any grant type. Don't confuse your client secret with your personal access token.
+
+Min Length
+2
+Max Length
+1024
+code
+
+string
+
+The authorization code to exchange for an OAuth access token. This is the code value that Square sent to your redirect URL in the authorization response.
+
+Required for the code flow and PKCE flow if grant_type is authorization_code.
+
+Max Length
+191
+redirect_uri
+
+string
+
+The redirect URL for your application, which you registered as the Redirect URL on the OAuth page in the Developer Console.
+
+Required for the code flow and PKCE flow if grant_type is authorization_code and you provided the redirect_uri parameter in your authorization URL.
+
+Max Length
+2048
+grant_type
+
+string
+
+Required
+
+The method used to obtain an OAuth access token. The request must include the credential that corresponds to the specified grant type. Valid values are:
+
+authorization_code - Requires the code field.
+refresh_token - Requires the refresh_token field.
+migration_token - LEGACY for access tokens obtained using a Square API version prior to 2019-03-13. Requires the migration_token field.
+Min Length
+10
+Max Length
+20
+refresh_token
+
+string
+
+A valid refresh token used to generate a new OAuth access token. This is a refresh token that was returned in a previous ObtainToken response.
+
+Required for the code flow and PKCE flow if grant_type is refresh_token.
+
+Min Length
+2
+Max Length
+1024
+migration_token
+
+string
+
+LEGACY A valid access token (obtained using a Square API version prior to 2019-03-13) used to generate a new OAuth access token.
+
+Required if grant_type is migration_token. For more information, see Migrate to Using Refresh Tokens.
+
+Min Length
+2
+Max Length
+1024
+scopes
+
+string [ ]
+
+The list of permissions that are explicitly requested for the access token. For example, ["MERCHANT_PROFILE_READ","PAYMENTS_READ","BANK_ACCOUNTS_READ"].
+
+The returned access token is limited to the permissions that are the intersection of these requested permissions and those authorized by the provided refresh_token.
+
+Optional for the code flow and PKCE flow if grant_type is refresh_token.
+
+short_lived
+
+boolean
+
+Indicates whether the returned access token should expire in 24 hours.
+
+Optional for the code flow and PKCE flow for any grant type. The default value is false.
+
+code_verifier
+
+string
+
+The secret your application generated for the authorization request used to obtain the authorization code. This is the source of the code_challenge hash you provided in your authorization URL.
+
+Required for the PKCE flow if grant_type is authorization_code.
+
+use_jwt
+
+boolean
+
+Indicates whether to use a JWT (JSON Web Token) as the OAuth access token. When set to true, the OAuth flow returns a JWT to your application, used in the same way as a regular token. The default value is false.
+
+Response fields
+access_token
+
+string
+
+An OAuth access token used to authorize Square API requests on behalf of the seller. Include this token as a bearer token in the Authorization header of your API requests.
+
+OAuth access tokens expire in 30 days (except short_lived access tokens). You should call ObtainToken and provide the returned refresh_token to get a new access token well before the current one expires. For more information, see OAuth API: Walkthrough.
+
+Min Length
+2
+Max Length
+1024
+token_type
+
+string
+
+The type of access token. This value is always bearer.
+
+Min Length
+2
+Max Length
+10
+expires_at
+
+string
+
+The timestamp of when the access_token expires, in ISO 8601 format.
+
+Min Length
+20
+Max Length
+48
+merchant_id
+
+string
+
+The ID of the authorizing merchant (seller), which represents a business.
+
+Min Length
+8
+Max Length
+191
+subscription_id
+
+string
+
+LEGACY The ID of merchant's subscription. The ID is only present if the merchant signed up for a subscription plan during authorization.
+
+plan_id
+
+string
+
+LEGACY The ID of the subscription plan the merchant signed up for. The ID is only present if the merchant signed up for a subscription plan during authorization.
+
+id_token
+
+string
+
+Deprecated
+
+The OpenID token that belongs to this person. This token is only present if the OPENID scope is included in the authorization request.
+
+Deprecated at version 2021-09-15. Square doesn't support OpenID or other single sign-on (SSO) protocols on top of OAuth.
+
+refresh_token
+
+string
+
+A refresh token that can be used in an ObtainToken request to generate a new access token.
+
+With the code flow:
+
+For the authorization_code grant type, the refresh token is multi-use and never expires.
+For the refresh_token grant type, the response returns the same refresh token.
+With the PKCE flow:
+
+For the authorization_code grant type, the refresh token is single-use and expires in 90 days.
+For the refresh_token grant type, the refresh token is a new single-use refresh token that expires in 90 days.
+For more information, see Refresh, Revoke, and Limit the Scope of OAuth Tokens.
+
+Min Length
+2
+Max Length
+1024
+short_lived
+
+boolean
+
+Indicates whether the access_token is short lived. If true, the access token expires in 24 hours. If false, the access token expires in 30 days.
+
+errors
+
+
+Error [ ]
+
+Any errors that occurred during the request.
+
+
+Show attributes
+
+refresh_token_expires_at
+
+string
+
+The timestamp of when the refresh_token expires, in ISO 8601 format.
+
+This field is only returned for the PKCE flow.
+
+Min Length
+20
+Max Length
+48
+
+API version
+2026-01-22
+
+
+
+
+
+
+POST /oauth2/token
+
+cURL
+
+
+
+curl https://connect.squareup.com/oauth2/token \
+  -X POST \
+  -H 'Square-Version: 2026-01-22' \
+  -H 'Authorization: Bearer ACCESS_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "client_id": "sq0idp-uaPHILoPzWZk3tlJqlML0g",
+    "client_secret": "sq0csp-30a-4C_tVOnTh14Piza2BfTPBXyLafLPWSzY1qAjeBfM",
+    "code": "sq0cgb-l0SBqxs4uwxErTVyYOdemg",
+    "grant_type": "authorization_code"
+  }'
+Response JSON
+
+
+
+{
+  "access_token": "EAAl3ikZIe18J-2-cHlV2bL4-EaZHGoJUhtEBT7QA6-7AgwIHw8Xe1IoUvGsNxA",
+  "token_type": "bearer",
+  "expires_at": "2025-04-03T18:31:06Z",
+  "merchant_id": "MLQW2MYBY81PZ",
+  "refresh_token": "EQAAl0OcByu3IYJYScGGg-8E5YNf0r0b6jCTCMy5nOcRZ4ok0wbWAL8vY3tZWNcc",
+  "short_lived": false
+}
+Development
+Guides
+API Reference
+API Explorer
+SDKs
+Sample apps
+System status
+Support
+Developer forums
+Contact support
+Developer blog
+Discord community
+YouTube
+X
+More
+Square Home
+Square Developer
+App Marketplace
+Partner with Square
+Solutions Partner Program
+Pricing
+Sales
+© 2026 Square, Inc.
+
+Developer terms of service
+Developer Integration and Marketing Agreement
+Privacy policy
+Opt-out of interest-based advertising
+POST /oauth2/token - Square API Reference

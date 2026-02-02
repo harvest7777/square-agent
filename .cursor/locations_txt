@@ -1,0 +1,519 @@
+
+
+Search developer resources
+/
+Docs & Tools
+SDKs
+Support
+Partnerships
+Account
+Docs Home
+Dev Essentials
+Payments
+Commerce
+Customers
+Staff
+Merchants
+Publish
+Release notes
+
+Overview
+Technical Scenarios
+
+Merchants
+Merchant Custom Attributes
+
+Locations
+Location Custom Attributes
+
+/
+
+Merchants
+Locations API
+Applies to: Locations API
+
+Learn how to use a Square API to update and retrieve location information for a Square seller.
+
+Overview
+Locations represent the sources of orders and fulfillments for businesses (such as physical brick and mortar stores, online marketplaces, warehouses, or anywhere a seller does business). When a seller signs up to become a Square merchant, they provide core business profile information that describes their business. At the same time, Square creates the seller's first Location object using information from the business profile. This is referred to as the main location. Newly created accounts only have this single location, but more locations can be created. Sellers can review and edit location information in the Square Dashboard.
+
+
+When creating an application that integrates with the Square API, several operations use a location ID as part of the request. For example:
+
+When you send a CreateCheckout request, you must include a location ID to specify which business location to associate with the payment.
+When you send a SearchTeamMembers request, you can optionally specify a location ID to retrieve a list of team members at a specific location.
+The location ID information is available through the Locations API or in the Developer Console:
+
+Sign in to the Developer Console.
+Choose an application from the My Applications section.
+Choose Locations.
+About the main location
+When a seller signs up to become a Square merchant, the initial location that Square creates is referred to as the main location. When working with the Locations API, some endpoints (such as RetrieveLocation) allow you to use the string main in place of a location ID to quickly access the main location.
+
+Working with the main location is helpful when developing an application or integration that isn't location-aware and that can use a merchant-wide default rather than forcing the user to choose a specific location. Additionally, it might be helpful to retrieve the main location when integrating with another API that uses this main location.
+
+The following applies to the main location:
+
+Subscription services (such as Payroll and Loyalty) bill to the business address found for the main location.
+Some Square API endpoints (such as CreatePayment) can include a location ID in the request. If none is specified, the main location will be used.
+If you deactivate the main location, Square chooses a new main location from the remaining list of active locations.
+Newly created Square accounts only have a single main location, which is created from the core business information provided by the seller. You can add more locations (up to 300 for a seller account) at any time. Each new location has a unique location ID assigned by Square.
+
+Consider an example business called Raphael's Puppy-Care Emporium, which has nine locations:
+
+Three brick and mortar locations with physical addresses in San Diego, San Francisco, and Boston.
+Three mobile locations for "treatmobiles" that sell homemade treats and dog toys around Oakland, Chicago, and New York City.
+One location for a fleet of pop-up grooming stations that rotate around local dog parks in various cities.
+Two virtual locations for an online store and a mobile application. The eCommerce site and mobile application both allow customers to buy products or book appointments for grooming services.
+A graphic showing four types of business locations: a building, a food truck, a temporary stand, and a card reader representing a virtual location.
+
+While it's possible for this business to use only one location for all Square orders and transactions, having multiple locations allows the seller to separate their sales activity, inventory, receipt layout, and reports, as well as make different products or catalog items available at specific locations.
+
+In the Square API, some customer-related interactions (such as taking payments, issuing refunds, and managing inventory) must be attributed to a specific location in the API call. Your software should honor the seller’s existing locations, and might optionally create new locations for its own use.
+
+Testing in the Sandbox
+Your Square account has access to a Sandbox account that you can use for API testing. For more information, see Square Sandbox.
+
+When testing the API, developers need a location for the Sandbox environment. Square provides a location for use in the Sandbox environment.
+
+Go to the Developer Console.
+Choose an application.
+On the Applications page, you can toggle between the Sandbox and Production account. Choose Sandbox.
+In the left pane, choose Locations. You see a list of locations you can use in Sandbox testing.
+Manage locations
+Sellers can manage their business locations using the Square Dashboard. The Locations API provides a set of endpoints to programmatically manage these locations. With this API, you can:
+
+Create a location.
+Retrieve a specific location.
+Retrieve a list of locations.
+Update a location.
+Create a location
+Create new locations with the CreateLocation endpoint. The location name (called Nickname in the Square Dashboard) is the only required field and must be unique within a seller account. Note that the location name is different from the business_name, which can be identical across locations but is visible to customers on receipts. In general, name should be used to differentiate between locations in your seller account, while business_name should represent your public-facing identity for that location. The business_name for a location can be changed no more than three times in a 12-month period.
+
+When creating a new location, include any field information that you care about for that location. The remaining fields are automatically added based on the data from the main location.
+
+For non-read-only fields, if you don't want Square to set these field values, you can set the field values to null.
+
+For details about each of these location fields, see the Location type.
+
+The following is an example CreateLocation request. In the request, the Authorization header provides the access token of the seller account where you want to create the location.
+
+Create location
+
+
+cURL
+
+
+
+curl https://connect.squareupsandbox.com/v2/locations \
+  -X POST \
+  -H 'Square-Version: 2026-01-22' \
+  -H 'Authorization: Bearer {ACCESS_TOKEN}' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "location": {
+      "name": "Oakland Treatmobile",
+      "description": "Mobile dog treats and toys in Oakland",
+      "address": {
+        "address_line_1": "1955 Broadway",
+        "address_line_2": "Suite 600",
+        "locality": "Oakland",
+        "administrative_district_level_1": "CA",
+        "postal_code": "94612"
+      },
+      "twitter_username": "raphaelspupemporium",
+      "instagram_username": "raphaelspupemporium",
+      "facebook_url": "facebook.com/raphaelspupemporium",
+      "type": "MOBILE",
+      "business_hours": {
+        "periods": [
+          {
+            "day_of_week": "THU",
+            "start_local_time": "10:00:00",
+            "end_local_time": "18:00:00"
+          },
+          {
+            "day_of_week": "FRI",
+            "start_local_time": "10:00:00",
+            "end_local_time": "18:00:00"
+          },
+          {
+            "day_of_week": "SAT",
+            "start_local_time": "10:00:00",
+            "end_local_time": "18:00:00"
+          }
+        ]
+      }
+    }
+  }'
+
+
+The following is an example response:
+
+
+
+{
+   "location":{
+      "id": "LXX23EZFG5M9S",
+      "name": "Oakland Treatmobile",
+       "address":{
+        "address_line_1": "1955 Broadway",
+        "address_line_2": "Suite 600",
+        "locality": "Oakland",
+        "administrative_district_level_1": "CA",
+        "postal_code": "94612"
+      },
+      "timezone": "UTC",
+      "capabilities":[
+         "CREDIT_CARD_PROCESSING"
+      ],
+      "status":"ACTIVE",
+      "created_at":"2021-11-09T22:00:19Z",
+      "merchant_id":"MLFG72TMMXMCQ",
+      "country":"US",
+      "language_code":"en-US",
+      "currency":"USD",
+      "business_name":"Raphaels Puppy-Care Emporium",
+      "type":"MOBILE",
+      "business_hours":{
+         "periods": [
+          {
+            "day_of_week": "THU",
+            "start_local_time": "10:00:00",
+            "end_local_time": "18:00:00"
+          },
+          {
+            "day_of_week": "FRI",
+            "start_local_time": "10:00:00",
+            "end_local_time": "18:00:00"
+          },
+          {
+            "day_of_week": "SAT",
+            "start_local_time": "10:00:00",
+            "end_local_time": "18:00:00"
+          }
+        ]
+      },
+      "description":"Mobile dog treats and toys in Oakland",
+      "twitter_username":"raphaelspupemporium",
+      "instagram_username":"raphaelspupemporium",
+      "facebook_url":"facebook.com/raphaelspupemporium",
+      "mcc":"7299"
+   }
+}
+
+Retrieve a specific location
+If you know a location ID, you can retrieve the specific location information using the RetrieveLocation endpoint. This endpoint also supports specifying main as the location ID, in which case it returns information about the first location created when the seller account was created.
+
+The following example request:
+
+Specifies a location ID in the request URL.
+
+Specifies the access token of the seller account in the Authorization header.
+
+Retrieve location
+
+
+cURL
+
+
+
+curl https://connect.squareupsandbox.com/v2/locations/7WQ0KXC8ZSD90 \
+  -H 'Square-Version: 2026-01-22' \
+  -H 'Authorization: Bearer {ACCESS_TOKEN}' \
+  -H 'Content-Type: application/json'
+
+The following is an example response:
+
+
+
+{
+  "location": {
+    "id": "7WQ0KXC8ZSD90",
+    "name": "San Francisco Storefront",
+    "address": {
+      "address_line_1": "1455 Market Street",
+      "locality": "San Francisco",
+      "administrative_district_level_1": "CA",
+      "postal_code": "94103",
+      "country": "US"
+    },
+    "timezone": "America/Los_Angeles",
+    "capabilities": [
+      "CREDIT_CARD_PROCESSING"
+    ],
+    "status": "ACTIVE",
+    "created_at": "2021-01-16T22:20:13Z",
+    "merchant_id": "2RNAQEFCTQ18Y",
+    "country": "US",
+    "language_code": "en-US",
+    "currency": "USD",
+    "business_name": "Raphaels Puppy-Care Emporium",
+    "type": "PHYSICAL",
+    "business_hours": {},
+    "coordinates": {
+      "latitude": 37.775470,
+      "longitude": -122.417880
+    },
+    "mcc": "7299"
+  }
+}
+
+You can also request the main location without knowing its ID by calling RetrieveLocation using main as the location ID.
+
+Retrieve location
+
+
+cURL
+
+
+
+curl https://connect.squareupsandbox.com/v2/locations/main \
+  -H 'Square-Version: 2026-01-22' \
+  -H 'Authorization: Bearer {ACCESS_TOKEN}' \
+  -H 'Content-Type: application/json'
+
+Retrieve a list of locations
+The following ListLocations request retrieves information about all the locations for a seller account identified by the access token in the Authorization header:
+
+List locations
+
+
+cURL
+
+
+
+curl https://connect.squareupsandbox.com/v2/locations \
+  -H 'Square-Version: 2026-01-22' \
+  -H 'Authorization: Bearer {ACCESS_TOKEN}' \
+  -H 'Content-Type: application/json'
+
+Adjusting locations (best practices)
+Square sellers need to be able to select one of their Square locations in your application when using it to collect payments, pull their catalog data, and perform other activities. If you publish your application in the Square App Marketplace, sellers must be able to adjust their selected locations in your platform any time. Allow users to update and save a new location selection in your interface and call ListLocations to populate the selection field options.
+
+Update a location
+Use the UpdateLocation endpoint to update one or more location field values. In the request, provide only the fields you want to update.
+
+Note
+The location Address is a composite data type. In this case, even if you want to update only a portion of an address, you must use a complete address, including address_line_1, locality, administrative_district_level_1, and postal code in the request.
+
+The following UpdateLocation request updates the name and address of the location identified by the location ID in the request URL. It also removes the location's description by setting it to null.
+
+Update location
+
+
+cURL
+
+
+
+curl https://connect.squareupsandbox.com/v2/locations/7WQ0KXC8ZSD90 \
+  -X PUT \
+  -H 'Square-Version: 2026-01-22' \
+  -H 'Authorization: Bearer {ACCESS_TOKEN}' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "location": {
+      "name": "San Francisco Puppy Care",
+      "address": {
+        "address_line_1": "1455 Market street",
+        "address_line_2": "Suite 600",
+        "locality": "San Francisco",
+        "administrative_district_level_1": "CA",
+        "postal_code": "94103",
+        "country": "US"
+      },
+      "description": null
+    }
+  }'
+
+
+Permissions
+The Locations API requires the following OAuth permissions:
+
+Endpoint	Permission
+CreateLocation	MERCHANT_PROFILE_WRITE
+ListLocations	MERCHANT_PROFILE_READ
+RetrieveLocation	MERCHANT_PROFILE_READ
+UpdateLocation	MERCHANT_PROFILE_WRITE
+For more information and a complete list of OAuth permissions required for Square APIs, see the OAuth Permissions Reference.
+
+Images
+A seller can associate up to three images with a location. These images are stored in the logo_url, full_format_logo_url, and pos_background_url fields. The fields are optional and can point to the URLs for the logos used on receipts, invoices, loyalty campaigns, or Square Point of Sale systems. Sellers can upload logos on the Receipts page in the Square Dashboard.
+
+In your application, the image found at the logo_url works well as a favicon or other small image, while the full_format_url works well for wider formats, such as invoice or email headers. If you need to resize or alter seller logo images, you should rehost the image for use in your application. Note, however, that these fields are read-only and cannot be updated with the Locations API.
+
+Webhooks
+The Locations API supports the following webhook events:
+
+Event	Permission	Description
+location.created	MERCHANT_PROFILE_READ	A Location was created.
+location.updated	MERCHANT_PROFILE_READ	A Location was updated.
+For more information about using webhooks, see Square Webhooks. For a list of webhook events you can subscribe to, see Webhook Events Reference.
+
+Merchant category codes
+Each location has a merchant category code (MCC) that describes the types of goods or services sold at that location. The MCC values are standardized by ISO 18245 and are widely used in the financial industry. Some of the sites that provide MCC descriptions are:
+
+USDA MCC directory.
+Visa Merchant Data Standards Manual.
+Mastercard Quick Reference.
+Citibank MCC list.
+It's helpful to assign an MCC that is closely associated with what the business does at that location. Some examples of how MCCs are used today include the following:
+
+Credit card issuers use MCCs to identify the type of business the merchant is engaged in and offer points for qualified credit card purchases.
+
+Some payment cards are only accepted by certain types of businesses. For example, HSA cards (limited to medical expenses) or virtual cards from a hotel website (limited to hotel reservations). Such methods are enabled only when sellers have an appropriate MCC.
+
+Applications can connect a seller with customers who are suited for the business by setting categories (for example, a Facebook page category or a Google business category). This approach is more effective when an MCC matches what the business does.
+
+In the context of MCC initialization, Square refers to an MCC as a "specific MCC" if it accurately describes what a business does at a location. In contrast, some MCCs are general purpose and have catch-all descriptions. The Locations API considers the following MCCs to be general purpose:
+
+8999 (Professional Services)
+7299 (Personal Services)
+5944 (Other)
+If there is no specific information available, Square assigns one of the preceding general-purpose MCC values to the location: 5944 for a seller account in Japan and 7299 for a seller account in other countries.
+
+If your business location has any of these general-purpose MCC values, you can call UpdateLocation to update the MCC to a value that accurately reflects your business.
+
+Important
+In the current implementation, after you change the MCC for a location from a general-purpose MCC to a specific MCC, you cannot make further updates to the MCC through this endpoint. However, during testing you can reset a location's MCC to its default value in the Square Sandbox. For more information, see Testing MCC initialization.
+
+The following example sets MCC 8299 for a location:
+
+Update location
+
+
+cURL
+
+
+
+curl https://connect.squareupsandbox.com/v2/locations/7WQ0KXC8ZSD90 \
+  -X PUT \
+  -H 'Square-Version: 2026-01-22' \
+  -H 'Authorization: Bearer {ACCESS_TOKEN}' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "location": {
+      "mcc": "8299"
+    }
+  }'
+
+MCCs available for initialization
+You can provide the following MCC values to the UpdateLocation endpoint:
+
+MCCs available in the United States - 0742, 1520, 4121, 4722, 5192, 5399, 5411, 5499, 5552, 5699, 5712, 5811, 5812, 5813, 5814, 5944, 5971, 5993, 6300, 6513, 7216, 7230, 7298, 7299, 7372, 7392, 7399, 7699, 7997, 8011, 8021, 8082, 8111, 8299, 8398, 8651, 8661, 8675, 8699, 8931, 8999
+
+MCCs available in Japan - 0742, 1520, 4121, 4722, 5499, 5611, 5712, 5812, 5944, 5971, 5999, 6513, 7230, 7278, 7299, 7361, 7372, 7392, 7699, 7922, 7997, 8021, 8082, 8111, 8244, 8398, 8699, 8931, 8999
+
+MCCs available in Canada - 0742, 1520, 4121, 5399, 5499, 5552, 5699, 5712, 5811, 5812, 5813, 5814, 5944, 5971, 5993, 6300, 6513, 7230, 7299, 7372, 7392, 7399, 7699, 8011, 8021, 8082, 8111, 8299, 8398, 8699, 8931, 8999
+
+MCCs available in Great Britain - 0742, 1520, 4121, 4722, 5399, 5499, 5552, 5699, 5712, 5811, 5812, 5813, 5814, 5944, 5971, 5993, 6300, 6513, 7230, 7299, 7372, 7392, 7399, 7699, 8011, 8021, 8082, 8111, 8299, 8398, 8651, 8699, 8931, 8999
+
+MCCs available in France - 0742, 1520, 4121, 4722, 5399, 5499, 5552, 5699, 5712, 5811, 5812, 5813, 5814, 5944, 5971, 5993, 6300, 6513, 7230, 7299, 7372, 7392, 7399, 7699, 8011, 8021, 8082, 8111, 8299, 8398, 8651, 8699, 8931, 8999
+
+MCCs available in Ireland - 0742, 1520, 4121, 4722, 5399, 5499, 5552, 5699, 5712, 5811, 5812, 5813, 5814, 5944, 5971, 5993, 6300, 6513, 7230, 7299, 7372, 7392, 7399, 7699, 8011, 8021, 8082, 8111, 8299, 8398, 8651, 8699, 8931, 8999
+
+MCCs available in Spain - 0742, 1520, 4121, 4722, 5399, 5499, 5552, 5699, 5712, 5811, 5812, 5813, 5814, 5944, 5971, 5993, 6300, 6513, 7230, 7299, 7372, 7392, 7399, 7699, 8011, 8021, 8082, 8111, 8299, 8398, 8651, 8699, 8931, 8999
+
+MCCs available in Australia - 0742, 1520, 4121, 4722, 5331, 5499, 5552, 5699, 5712, 5811, 5812, 5813, 5814, 5921, 5944, 5971, 5993, 6300, 6513, 7230, 7273, 7299, 7372, 7392, 7399, 7538, 8011, 8021, 8082, 8111, 8299, 8398, 8651, 8699, 8931, 8999
+
+MCC descriptions
+The following are descriptions of the MCCs available for initialization:
+
+0742 - Veterinary
+1520 - Trade Contractor
+4121 - Taxi/Limo
+4722 - Tourism
+5192 - Books, Periodicals, and Newspapers
+5331 - Variety Stores
+5399 - Misc. General Merchandise
+5411 - Grocery / Market
+5499 - Food / Grocery
+5552 - Electric Vehicle Charging
+5611 - Men's Apparel
+5699 - Apparel
+5712 - Furniture / Home Goods
+5811 - Caterers
+5812 - Restaurant/Bar
+5813 - Bar / Club / Lounge
+5814 - Food Truck / Cart
+5944 - Jewelry and Watches
+5944 - Other (Japan only)
+5971 - Art Dealer
+5993 - Tobacco
+5999 - Miscellaneous and Specialty Retail Shops
+6300 - Insurance Sales, Underwriting, and Premiums
+6513 - Real Estate
+7216 - Dry Cleaning and Laundry
+7230 - Beauty / Barber
+7273 - Dating and Escort Services
+7278 - Outdoor Markets
+7298 - Health and Beauty Spas
+7299 - Personal Services
+7372 - Web Dev/Design
+7361 - Tutoring
+7392 - Consultant
+7399 - Business Services
+7699 - Repair Services
+7922 - Ticket Sales
+7997 - Membership Clubs / Sports Facilities
+8011 - Medical Practitioner
+8021 - Dentistry
+8082 - Home Health Care Services
+8111 - Legal Services
+8244 - Education
+8299 - School & Education
+8398 - Charity / Social Services
+8651 - Political Organizations
+8661 - Religious Organizations
+8675 - Automobile Associations and Clubs
+8699 - Membership Org
+8931 - Accounting
+8999 - Professional Services
+Testing MCC initialization
+In production, you can initialize a location's MCC only once using the UpdateLocation endpoint. However, you can reset a location's MCC to its default value in the Square Sandbox. This lets you initialize a location's MCC any number of times in the Sandbox for testing purposes. To reset a location's MCC, do the following:
+
+Go to the Developer Console.
+Choose an application.
+In the left pane, choose Locations.
+On the Locations page, choose Sandbox.
+Choose ... (ellipsis) in the Action column next to the location you want to update, and then choose Reset MCC.
+After the MCC is reset, you can call UpdateLocation to set a location's MCC again.
+
+On this page
+Overview
+About the main location
+Testing in the Sandbox
+Manage locations
+Permissions
+Images
+Webhooks
+Merchant category codes
+Development
+Guides
+API Reference
+API Explorer
+SDKs
+Sample apps
+System status
+Support
+Developer forums
+Contact support
+Developer blog
+Discord community
+YouTube
+X
+More
+Square Home
+Square Developer
+App Marketplace
+Partner with Square
+Solutions Partner Program
+Pricing
+Sales
+© 2026 Square, Inc.
+
+Developer terms of service
+Developer Integration and Marketing Agreement
+Privacy policy
+Opt-out of interest-based advertising
+Locations API
