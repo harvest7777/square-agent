@@ -1,0 +1,21 @@
+--==++TASKS
+
+--== PRE REQUISITES
+-- understanding flow
+
+Run services/get_auth_link.py
+Get the auth link
+Trade the ⁨
+code?
+⁩ param for a bearer token on https://developer.squareup.com/explorer/square/o-auth-api/obtain-token
+
+Use the bearer token to make a request to the locatiosn api on https://developer.squareup.com/explorer/square/locations-api/list-locations
+
+--== DELIVERABLE
+a pythin script that serves the following user story
+i am a business owner
+i want to connect square
+i will get this link that connects square
+if it succeeds or fails i want to see immediate feedback for it
+
+if it succeeds i want to see a list of my store locations and menu items
