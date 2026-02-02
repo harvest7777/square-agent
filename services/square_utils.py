@@ -108,7 +108,7 @@ def place_order(variation_id: str, idempotency_key: str = None) -> None:
         raise Exception("No locations found for this Square account")
     location_id = locations_response.locations[0].id
 
-    response = client.graph.create(
+    response = client.orders.create(
         idempotency_key=idempotency_key,
         order={
             "location_id": location_id,
