@@ -2,6 +2,10 @@ import secrets
 import urllib.parse
 
 import os
+
+from dotenv import load_dotenv
+load_dotenv()
+
 CLIENT_ID = os.getenv("SQUARE_SANDBOX_ID")
 REDIRECT_URI = "http://localhost:3000/square/callback"
 
