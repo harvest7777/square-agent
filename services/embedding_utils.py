@@ -12,10 +12,8 @@ gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 # Embedding model to use
 EMBEDDING_MODEL = "text-embedding-004"
 
-# Cache for intent example embeddings (computed once)
 _intent_embeddings_cache = {}
 
-# Cache for menu item example embeddings (computed once)
 _menu_item_embeddings_cache = {}
 
 
@@ -38,16 +36,7 @@ def get_embedding(text: str) -> list:
 
 
 def cosine_similarity(vec1: list, vec2: list) -> float:
-    """
-    Compute cosine similarity between two vectors.
-
-    Args:
-        vec1: First embedding vector
-        vec2: Second embedding vector
-
-    Returns:
-        Cosine similarity score between -1 and 1
-    """
+    
     dot_product = sum(a * b for a, b in zip(vec1, vec2))
     magnitude1 = sum(a * a for a in vec1) ** 0.5
     magnitude2 = sum(b * b for b in vec2) ** 0.5
@@ -59,13 +48,7 @@ def cosine_similarity(vec1: list, vec2: list) -> float:
 
 
 def get_intent_embeddings() -> dict:
-    """
-    Get or compute embeddings for all intent examples.
-    Results are cached to avoid repeated API calls.
-
-    Returns:
-        Dictionary mapping intent names to lists of embedding vectors
-    """
+    
     global _intent_embeddings_cache
 
     if not _intent_embeddings_cache:
@@ -78,13 +61,7 @@ def get_intent_embeddings() -> dict:
 
 
 def get_menu_item_embeddings() -> dict:
-    """
-    Get or compute embeddings for all menu item examples.
-    Results are cached to avoid repeated API calls.
-
-    Returns:
-        Dictionary mapping menu item numbers (int) to lists of embedding vectors
-    """
+    
     global _menu_item_embeddings_cache
 
     if not _menu_item_embeddings_cache:
