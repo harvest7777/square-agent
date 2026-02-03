@@ -40,7 +40,7 @@ Intent:"""
 
 def detect_intent(user_input: str) -> str:
     """
-    LLM-based intent detection using OpenAI.
+    LLM-based intent detection using Gemini.
 
     Analyzes user input to determine their intent in the context of
     a food ordering system.
@@ -55,19 +55,18 @@ def detect_intent(user_input: str) -> str:
         - "unknown": Couldn't determine intent
     """
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "user",
-                    "content": INTENT_DETECTION_PROMPT.format(user_input=user_input)
-                }
-            ],
-            max_tokens=20,
-            temperature=0
+        from google.genai import types
+        
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents=INTENT_DETECTION_PROMPT.format(user_input=user_input),
+            config=types.GenerateContentConfig(
+                max_output_tokens=20,
+                temperature=0
+            )
         )
 
-        intent = response.choices[0].message.content.strip().lower()
+        intent = response.text.strip().lower()
 
         # Validate the intent is one of our expected values
         if intent in VALID_INTENTS:

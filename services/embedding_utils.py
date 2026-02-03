@@ -1,15 +1,16 @@
 import os
-from openai import OpenAI
+from google import genai
 from dotenv import load_dotenv
 from core.intent_examples import INTENT_EXAMPLES, MENU_ITEM_EXAMPLES
 
 load_dotenv()
 
-
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Initialize Gemini client - API key will be loaded from environment
+# Set GEMINI_API_KEY in your .env file
+gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 # Embedding model to use
-EMBEDDING_MODEL = "text-embedding-3-small"
+EMBEDDING_MODEL = "text-embedding-004"
 
 _intent_embeddings_cache = {}
 
@@ -17,13 +18,21 @@ _menu_item_embeddings_cache = {}
 
 
 def get_embedding(text: str) -> list:
-    
+    """
+    Get the embedding vector for a text string using Gemini's embedding model.
+
+    Args:
+        text: The text to embed
+
+    Returns:
+        List of floats representing the embedding vector
+    """
     text = text.replace("\n", " ").strip()
-    response = openai_client.embeddings.create(
-        input=[text],
-        model=EMBEDDING_MODEL
+    response = gemini_client.models.embed_content(
+        model=EMBEDDING_MODEL,
+        contents=text
     )
-    return response.data[0].embedding
+    return response.embeddings[0].values
 
 
 def cosine_similarity(vec1: list, vec2: list) -> float:
