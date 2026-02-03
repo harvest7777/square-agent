@@ -1,12 +1,4 @@
-"""
-Script to fetch store locations and menu items from Square API.
 
-This script uses the BEARER_TOKEN (OAuth access token) to retrieve
-a merchant's store locations and catalog items.
-
-Usage:
-    python services/get_store_data.py
-"""
 import os
 from dotenv import load_dotenv
 from square import Square
@@ -15,7 +7,6 @@ from square.environment import SquareEnvironment
 load_dotenv()
 
 def get_square_client() -> Square:
-    """Create a Square client using the OAuth bearer token."""
     bearer_token = os.environ.get("BEARER_TOKEN")
     if not bearer_token:
         raise ValueError("BEARER_TOKEN not found in environment variables")
@@ -27,7 +18,6 @@ def get_square_client() -> Square:
 
 
 def format_cents(cents: int) -> str:
-    """Convert cents to a formatted USD currency string."""
     if cents is None:
         return "Price not set"
     dollars = cents / 100.0
@@ -35,12 +25,6 @@ def format_cents(cents: int) -> str:
 
 
 def fetch_locations(client: Square) -> list:
-    """
-    Fetch all locations for the authenticated merchant.
-
-    Returns:
-        List of location dictionaries with id, name, address, and status.
-    """
     response = client.locations.list()
 
     if response.errors:
@@ -76,12 +60,7 @@ def fetch_locations(client: Square) -> list:
 
 
 def fetch_catalog_items(client: Square) -> list:
-    """
-    Fetch all catalog items (menu items) for the authenticated merchant.
-
-    Returns:
-        List of item dictionaries with name, variations, and prices.
-    """
+    
     items = []
 
     # catalog.list returns a pager, iterate through it
@@ -158,7 +137,6 @@ def display_menu_items(items: list) -> None:
 
 
 def main():
-    """Main function to fetch and display store data."""
     print("Connecting to Square API...")
 
     try:

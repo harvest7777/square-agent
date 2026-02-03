@@ -17,15 +17,7 @@ client = Square(
 
 
 def _format_cents(cents: int) -> str:
-    """
-    Convert cents to a formatted USD currency string.
-
-    Args:
-        cents: Integer value representing the amount in cents (e.g., 1000 for $10.00)
-
-    Returns:
-        Formatted currency string with dollar sign and two decimal places (e.g., "$10.00")
-    """
+    
     dollars = cents / 100.0
     return f"${dollars:.2f}"
 
@@ -51,19 +43,7 @@ def _get_prety_menu_string_from_variation_id(variation_id: str) -> str:
     return pretty_item
 
 def _get_variation_info_from_item_id(item_id: str) -> str:
-    """
-    Developer utility function to retrieve and display item variation information.
-
-    This function is intended for developers only to help identify which item variations
-    to hardcode in the application. It displays the real-world correlation of each variation,
-    including the price, name, variation ID, and how it should appear on the menu.
-
-    Args:
-        item_id: The catalog object ID for the item whose variations should be retrieved
-
-    Returns:
-        Formatted string containing all variations with their prices, names, and IDs
-    """
+    
     pretty_menu = ""
 
     response = client.catalog.object.get(
@@ -83,21 +63,7 @@ def _get_variation_info_from_item_id(item_id: str) -> str:
 
 
 def place_order(variation_id: str, idempotency_key: str = None) -> None:
-    """
-    Place an unpaid order to Square for the specified variation.
-
-    This function will raise an error if there is any issue placing the order.
-    Otherwise, it will successfully place an unpaid order to Square.
-
-    Args:
-        variation_id: The Square catalog variation ID for the item to order
-        idempotency_key: Optional unique key to prevent duplicate graph. If not provided,
-                        a new UUID will be generated. To prevent duplicates on page refresh,
-                        provide a consistent key for the same order attempt.
-
-    Raises:
-        Exception: If there is any issue placing the order with Square
-    """
+    
     if idempotency_key is None:
         idempotency_key = str(uuid.uuid4())
         print(idempotency_key)

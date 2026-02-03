@@ -1,19 +1,4 @@
-"""
-Script to exchange an OAuth authorization code for a bearer token.
 
-This is Step 4 in the OAuth workflow:
-1. get_auth_link.py → generates auth URL
-2. User authorizes → redirected with code
-3. Callback receives code
-4. THIS SCRIPT → exchanges code for bearer token
-5. get_store_data.py → uses token to fetch data
-
-Usage:
-    python services/exchange_code_for_token.py <authorization_code>
-
-Example:
-    python services/exchange_code_for_token.py sq0cgb-ABC123XYZ
-"""
 import os
 import sys
 import requests
@@ -29,19 +14,7 @@ TOKEN_URL = "https://connect.squareupsandbox.com/oauth2/token"
 
 
 def exchange_code_for_token(authorization_code: str) -> dict:
-    """
-    Exchange an authorization code for OAuth access and refresh tokens.
-
-    Args:
-        authorization_code: The code received from Square's OAuth callback
-
-    Returns:
-        Dictionary containing access_token, refresh_token, merchant_id, etc.
-
-    Raises:
-        ValueError: If required environment variables are missing
-        Exception: If the token exchange fails
-    """
+    
     if not SQUARE_SANDBOX_ID:
         raise ValueError("SQUARE_SANDBOX_ID not found in environment variables")
     if not SQUARE_SANDBOX_SECRET:
@@ -72,7 +45,6 @@ def exchange_code_for_token(authorization_code: str) -> dict:
 
 
 def display_token_info(token_data: dict) -> None:
-    """Display the token information in a formatted way."""
     print("\n" + "=" * 60)
     print("TOKEN EXCHANGE SUCCESSFUL")
     print("=" * 60)
@@ -93,7 +65,6 @@ def display_token_info(token_data: dict) -> None:
 
 
 def main():
-    """Main function to exchange authorization code for tokens."""
     if len(sys.argv) < 2:
         print("Usage: python services/exchange_code_for_token.py <authorization_code>")
         print("\nExample:")
