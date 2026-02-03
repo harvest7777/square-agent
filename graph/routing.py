@@ -58,15 +58,11 @@ def detect_intent(user_input: str) -> str:
         from google.genai import types
         
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model="gemini-2.5-flash",
             contents=INTENT_DETECTION_PROMPT.format(user_input=user_input),
-            config=types.GenerateContentConfig(
-                max_output_tokens=20,
-                temperature=0
-            )
         )
 
-        intent = response.text.strip().lower()
+        intent = response.text.strip().lower() if response.text else None
 
         # Validate the intent is one of our expected values
         if intent in VALID_INTENTS:

@@ -89,4 +89,3 @@ def _build_workflow() -> StateGraph:
 # Build and compile the graph with PostgreSQL checkpointer
 # This graph instance can be imported and used anywhere (FastAPI, CLI, etc.)
 graph = _build_workflow().compile(checkpointer=checkpointer)
-print(graph.get_graph().draw_ascii())
