@@ -30,6 +30,12 @@ def square_callback(code: str):
     store_auth_data = oauth.exchange_code(code)
     bearer_token = store_auth_data.access_token
     merchant_id = store_auth_data.merchant_id
+    print("\n--- OAuth exchange success ---")
+    print(f"merchant_id: {merchant_id}")
+    print(f"bearer_token: {bearer_token}")
+    print(f"refresh_token: {store_auth_data.refresh_token}")
+    print(f"expires_at: {store_auth_data.expires_at}")
+    print("---\n")
     return {"status": "ok"}
 
 
