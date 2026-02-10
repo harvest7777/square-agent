@@ -26,14 +26,11 @@ async def handle_message(ctx: Context, sender: str, msg: ChatMessage):
     Uses the sender address as the thread_id so each user has their own
     persistent conversation state (cart, etc.).
     """
-    ctx.logger.info(f"Received message from {sender}")
 
-    # Extract text content from the message
-    user_input = ""
-    for item in msg.content:
-        if isinstance(item, TextContent):
-            user_input = item.text
-            break
+    # Extract text content from the message, stripping any @agent... prefix
+    raw_text = msg.content[0].text
+    user_input = raw_text.split(maxsplit=1)[1] if raw_text.startswith("@") and " " in raw_text else raw_text
+    ctx.logger.info(user_input)
 
     if not user_input:
         await ctx.send(

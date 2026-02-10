@@ -1,5 +1,10 @@
 from graph.state import OrderState
-from graph.data import format_menu, find_item
+from graph.data import format_menu, find_items, square_client
+
+
+def _format_cents(cents: int) -> str:
+    """Convert cents to a dollar-formatted string."""
+    return f"${cents / 100.0:.2f}"
 
 
 def _build_response(message: str, warning: str | None) -> str:
@@ -21,34 +26,33 @@ def show_menu(state: OrderState) -> dict:
 
 
 def add_to_cart(state: OrderState) -> dict:
-    """
-    Parse item from user input and add to cart.
-
-    This is a simple keyword match - in production you'd use
-    an LLM to extract the item name more intelligently.
-    """
+    """Parse items from user input and add them to cart."""
     user_input = state.get("user_input", "")
-    cart = state.get("cart", []).copy()  # Copy to avoid mutation
+    cart = state.get("cart", []).copy()
 
-    # Try to find a matching menu item
-    item = find_item(user_input)
+    items = find_items(user_input)
 
-    if item:
-        cart.append(item)
-        total = sum(i["price"] for i in cart)
+    if not items:
         return {
-            "cart": cart,
-            "bot_response": f"Added {item['name']} (${item['price']:.2f}) to your cart.\n"
-                           f"Cart total: ${total:.2f} ({len(cart)} item(s))\n\n"
-                           f"Say 'confirm' to checkout, 'cart' to see your order, or keep adding items.",
-            "conversation_stage": "ordering"
-        }
-    else:
-        return {
-            "bot_response": "I couldn't find that item on the menu. "
+            "bot_response": "I couldn't find any matching items on the menu. "
                            "Try saying 'menu' to see what's available.",
             "conversation_stage": "ordering"
         }
+
+    cart.extend(items)
+    total = sum(i["price_cents"] for i in cart)
+
+    added_lines = [f"  - {item['name']} ({_format_cents(item['price_cents'])})" for item in items]
+    added_text = "\n".join(added_lines)
+
+    return {
+        "cart": cart,
+        "bot_response": f"Added {len(items)} item(s) to your cart:\n{added_text}\n\n"
+                       f"Cart total: ~~{_format_cents(total)}~~ $0.00\n"
+                       f"On behalf of Fetch.ai, your total is free for this event!\n\n"
+                       f"Say 'confirm' to checkout, 'cart' to see your order, or keep adding items.",
+        "conversation_stage": "ordering"
+    }
 
 
 def show_cart(state: OrderState) -> dict:
@@ -63,10 +67,10 @@ def show_cart(state: OrderState) -> dict:
 
     lines = ["Your current order:\n"]
     for i, item in enumerate(cart, 1):
-        lines.append(f"  {i}. {item['name']} - ${item['price']:.2f}")
+        lines.append(f"  {i}. {item['name']} - {_format_cents(item['price_cents'])}")
 
-    total = sum(item["price"] for item in cart)
-    lines.append(f"\nTotal: ${total:.2f}")
+    total = sum(item["price_cents"] for item in cart)
+    lines.append(f"\nTotal: {_format_cents(total)}")
     lines.append("\nSay 'confirm' to checkout or 'cancel' to clear your cart.")
 
     return {
@@ -76,15 +80,7 @@ def show_cart(state: OrderState) -> dict:
 
 
 def confirm_order(state: OrderState) -> dict:
-    """
-    Confirm and place the order.
-
-    In production this would:
-    - Validate the order
-    - Process payment
-    - Send to kitchen/fulfillment
-    - Return order confirmation number
-    """
+    """Confirm and place the order via Square (no payment — event-covered)."""
     cart = state.get("cart", [])
 
     if not cart:
@@ -94,14 +90,19 @@ def confirm_order(state: OrderState) -> dict:
             "conversation_stage": "idle"
         }
 
-    # "Process" the order
-    total = sum(item["price"] for item in cart)
+    line_items = [
+        {"variation_id": item["variation_id"]}
+        for item in cart
+    ]
+    order_id = square_client.place_order(line_items=line_items, name="Fetch.ai Event")
+
+    total = sum(item["price_cents"] for item in cart)
     item_count = len(cart)
 
-    # Clear the cart after order
     return {
-        "cart": [],  # Clear cart
-        "bot_response": f"Order confirmed! You ordered {item_count} item(s) for ${total:.2f}.\n"
+        "cart": [],
+        "bot_response": f"Order confirmed! You ordered {item_count} item(s) for {_format_cents(total)}.\n"
+                       f"Order ID: {order_id}\n"
                        f"Thank you for your order!\n\n"
                        f"Say 'menu' to start a new order.",
         "conversation_stage": "idle"
@@ -121,7 +122,7 @@ def cancel_order(state: OrderState) -> dict:
 
     item_count = len(cart)
     return {
-        "cart": [],  # Clear cart
+        "cart": [],
         "bot_response": f"Order cancelled. Removed {item_count} item(s) from your cart.\n"
                        f"Say 'menu' to start over.",
         "conversation_stage": "idle"

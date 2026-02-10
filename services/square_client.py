@@ -201,38 +201,48 @@ class SquareClient:
 
     def place_order(
         self,
-        variation_id: str,
-        quantity: str = "1",
+        line_items: list[dict],
+        name: str | None = None,
         idempotency_key: str | None = None,
     ) -> str:
         """
-        Place an order for a catalog variation.
+        Place an order with one or more line items.
 
         Args:
-            variation_id: The catalog variation ID to order.
-            quantity: Quantity as a string (Square API convention).
+            line_items: List of dicts, each with "variation_id" and
+                        optional "quantity" (defaults to "1").
+            name: Optional display name for the order (e.g. "Fetch.ai Event").
             idempotency_key: Unique key to prevent duplicate orders.
                              Auto-generated if not provided.
 
         Returns:
             The created order ID.
         """
+        if not line_items:
+            raise ValueError("line_items must not be empty")
+
         if idempotency_key is None:
             idempotency_key = str(uuid.uuid4())
 
         location_id = self._get_primary_location_id()
 
+        order = {
+            "location_id": location_id,
+            "line_items": [
+                {
+                    "catalog_object_id": item["variation_id"],
+                    "quantity": item.get("quantity", "1"),
+                }
+                for item in line_items
+            ],
+        }
+
+        if name:
+            order["reference_id"] = name
+
         response = self._sdk.orders.create(
             idempotency_key=idempotency_key,
-            order={
-                "location_id": location_id,
-                "line_items": [
-                    {
-                        "catalog_object_id": variation_id,
-                        "quantity": quantity,
-                    }
-                ],
-            },
+            order=order,
         )
 
         if response.errors:

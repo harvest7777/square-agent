@@ -16,8 +16,8 @@ class OrderState(TypedDict, total=False):
     # One of: "view_menu", "add_item", "view_cart", "confirm", "cancel", "help", "unknown"
     intent: str
 
-    # Shopping cart - list of items with name and price
-    # Example: [{"name": "Cheese Burger", "price": 9.99, "category": "Burgers"}]
+    # Shopping cart - list of items from the Square catalog
+    # Example: [{"name": "Matcha - Eispanner", "variation_id": "TPPW...", "price_cents": 650}]
     cart: list[dict]
 
     # Response to display to user
