@@ -15,7 +15,7 @@ from uagents import Agent
 from uagents.setup import fund_agent_if_low
 from dotenv import load_dotenv
 
-from langgraph_agent.chat_proto import chat_proto
+from wrapped_uagent.chat_proto import chat_proto
 from graph.checkpointer import cleanup_checkpointer
 
 load_dotenv()
