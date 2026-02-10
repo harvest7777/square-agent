@@ -9,17 +9,36 @@ from services.llm_client import client as llm
 load_dotenv()
 
 # Module-level client — initialized from the merchant's bearer token
-square_client = SquareClient(token=os.environ["BEARER_TOKEN"])
+square_client = SquareClient(token=os.environ["BEARER_TOKEN"], environment=os.environ["ENVIRONMENT"])
+
+# Variation-level allowlist: only these variations (and their parent items)
+# are visible in the menu and orderable. Update before each event.
+ALLOWED_VARIATION_IDS: set[str] = {
+    "2ARY3CNUY2XK3HBYQWU5VCK5",  # Tira-Miss-U
+    "ON7E4JRX37X6UNHRTJKM5S35",  # Cardinal Chai
+    "AGPGES5WOERWCEKPVC7T4QF3",  # Pep-in-yo-step
+    "AKEWKQSK5JQXMUQPUE3VAEOE",  # Karl the Fog
+    "ALRYZAS3HLYQHHE5U6XG4WVM",  # Love You So Matcha
+}
 
 # Cached catalog so we don't hit the API on every menu request
 _catalog_cache: list[dict] | None = None
 
 
 def _get_catalog() -> list[dict]:
-    """Fetch and cache the catalog from Square."""
+    """Fetch and cache the catalog from Square, filtered to allowed variations."""
     global _catalog_cache
     if _catalog_cache is None:
-        _catalog_cache = square_client.list_catalog_items()
+        full_catalog = square_client.list_catalog_items()
+        filtered = []
+        for item in full_catalog:
+            allowed_vars = [
+                v for v in item.get("variations", [])
+                if v["id"] in ALLOWED_VARIATION_IDS
+            ]
+            if allowed_vars:
+                filtered.append({**item, "variations": allowed_vars})
+        _catalog_cache = filtered
     return _catalog_cache
 
 
