@@ -11,6 +11,9 @@ load_dotenv()
 # Module-level client — initialized from the merchant's bearer token
 square_client = SquareClient(token=os.environ["BEARER_TOKEN"], environment=os.environ["ENVIRONMENT"])
 
+# Set to True to bypass the allowlist and show the full catalog.
+SHOW_ALL_PRODUCTS: bool = True 
+
 # Variation-level allowlist: only these variations (and their parent items)
 # are visible in the menu and orderable. Update before each event.
 ALLOWED_VARIATION_IDS: set[str] = {
@@ -30,15 +33,18 @@ def _get_catalog() -> list[dict]:
     global _catalog_cache
     if _catalog_cache is None:
         full_catalog = square_client.list_catalog_items()
-        filtered = []
-        for item in full_catalog:
-            allowed_vars = [
-                v for v in item.get("variations", [])
-                if v["id"] in ALLOWED_VARIATION_IDS
-            ]
-            if allowed_vars:
-                filtered.append({**item, "variations": allowed_vars})
-        _catalog_cache = filtered
+        if SHOW_ALL_PRODUCTS:
+            _catalog_cache = full_catalog
+        else:
+            filtered = []
+            for item in full_catalog:
+                allowed_vars = [
+                    v for v in item.get("variations", [])
+                    if v["id"] in ALLOWED_VARIATION_IDS
+                ]
+                if allowed_vars:
+                    filtered.append({**item, "variations": allowed_vars})
+            _catalog_cache = filtered
     return _catalog_cache
 
 
