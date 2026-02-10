@@ -164,16 +164,18 @@ def format_menu(*, simple: bool = True) -> str:
         return "The menu is currently unavailable."
 
     if simple:
-        lines = ["Here's our menu:\n"]
+        # Double newlines for line breaks; " = " separator so markdown doesn't strip it.
+        parts = ["Here's our menu", "=============", ""]
         for item in catalog:
             for var in item.get("variations", []):
                 price = var.get("price") or _format_cents_display(var.get("price_cents", 0))
-                lines.append(f"  {price} - {item['name']} - {var['name']}")
-        return "\n".join(lines) if len(lines) > 1 else "The menu is currently unavailable."
+                parts.append(f"  {price} = {item['name']}")
+        return "\n\n".join(parts) if len(parts) > 3 else "The menu is currently unavailable."
 
+    # Markdown-friendly: equals underline = heading, " = " separator, • for bullets.
     lines = [
         "Here's our menu",
-        "─────────────────",
+        "=============",
         ""
     ]
     n = 1
@@ -183,8 +185,8 @@ def format_menu(*, simple: bool = True) -> str:
             lines.append(f"     {item['description']}")
         for var in item.get("variations", []):
             price = var.get("price") or _format_cents_display(var.get("price_cents", 0))
-            lines.append(f"     • {var['name']} — {price}")
+            lines.append(f"     • {var['name']} = {price}")
         lines.append("")
         n += 1
     lines.append("Say an item name to add it, or 'cart' / 'confirm' when ready.")
-    return "\n".join(lines).strip()
+    return "\n\n".join(lines).strip()
