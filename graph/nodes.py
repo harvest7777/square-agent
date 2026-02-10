@@ -181,7 +181,8 @@ Just type naturally! For example:
 def handle_unknown(state: OrderState) -> dict:
     """Handle unrecognized input."""
     return {
-        "bot_response": "I didn't quite understand that. "
-                       "Try 'menu' to see options or 'help' for commands.",
+        "bot_response": "Hmm, I didn't quite catch that! This is the Fetch.ai Coffee x On Call event bot — "
+                       "I'm here to help you order drinks. Say 'menu' to see what's available, or 'help' for all commands. "
+                       "What would you like?",
         "conversation_stage": state.get("conversation_stage", "idle")
     }
