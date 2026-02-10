@@ -147,19 +147,44 @@ def find_items(user_input: str) -> list[dict]:
         return []
 
 
-def format_menu() -> str:
-    """Format the Square catalog for display."""
+def _format_cents_display(cents: int) -> str:
+    """Format cents as $xx.xx for menu display."""
+    return f"${cents / 100.0:.2f}"
+
+
+def format_menu(*, simple: bool = True) -> str:
+    """Format the Square catalog for display.
+
+    When simple is True, each line is: $xx.xx - Item Name - Variation Name.
+    When simple is False, full menu with descriptions and numbered items.
+    """
     catalog = _get_catalog()
 
     if not catalog:
         return "The menu is currently unavailable."
 
-    lines = ["Here's our menu:\n"]
-    for item in catalog:
-        lines.append(f"\n{item['name']}:")
-        if item.get("description"):
-            lines.append(f"  {item['description']}")
-        for var in item.get("variations", []):
-            lines.append(f"  - {var['name']}: {var['price']}")
+    if simple:
+        lines = ["Here's our menu:\n"]
+        for item in catalog:
+            for var in item.get("variations", []):
+                price = var.get("price") or _format_cents_display(var.get("price_cents", 0))
+                lines.append(f"  {price} - {item['name']} - {var['name']}")
+        return "\n".join(lines) if len(lines) > 1 else "The menu is currently unavailable."
 
-    return "\n".join(lines)
+    lines = [
+        "Here's our menu",
+        "─────────────────",
+        ""
+    ]
+    n = 1
+    for item in catalog:
+        lines.append(f"  {n}. {item['name']}")
+        if item.get("description"):
+            lines.append(f"     {item['description']}")
+        for var in item.get("variations", []):
+            price = var.get("price") or _format_cents_display(var.get("price_cents", 0))
+            lines.append(f"     • {var['name']} — {price}")
+        lines.append("")
+        n += 1
+    lines.append("Say an item name to add it, or 'cart' / 'confirm' when ready.")
+    return "\n".join(lines).strip()
