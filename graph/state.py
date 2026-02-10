@@ -27,6 +27,9 @@ class OrderState(TypedDict, total=False):
     # This helps with context-aware intent detection (future LLM use)
     conversation_stage: str
 
+    # User's name for the order — collected before checkout
+    user_name: str | None
+
     # Warning shown when user has pending items and changes topic
     # Example: "Note: You have 2 item(s) in your cart."
     pending_action_warning: str | None

@@ -79,6 +79,23 @@ def show_cart(state: OrderState) -> dict:
     }
 
 
+def collect_name(state: OrderState) -> dict:
+    """Ask the user for their name before placing the order."""
+    cart = state.get("cart", [])
+
+    if not cart:
+        return {
+            "bot_response": "Your cart is empty! Add some items before confirming.\n"
+                           "Say 'menu' to see what's available.",
+            "conversation_stage": "idle"
+        }
+
+    return {
+        "bot_response": "What's your name for this order?",
+        "conversation_stage": "awaiting_name"
+    }
+
+
 def confirm_order(state: OrderState) -> dict:
     """Confirm and place the order via Square (no payment — event-covered)."""
     cart = state.get("cart", [])
@@ -90,17 +107,21 @@ def confirm_order(state: OrderState) -> dict:
             "conversation_stage": "idle"
         }
 
+    user_name = state.get("user_name", "Guest")
+    order_name = f"{user_name} - Fetch.ai Event"
+
     line_items = [
         {"variation_id": item["variation_id"]}
         for item in cart
     ]
-    order_id = square_client.place_order(line_items=line_items, name="Fetch.ai Event")
+    order_id = square_client.place_order(line_items=line_items, name=order_name)
 
     total = sum(item["price_cents"] for item in cart)
     item_count = len(cart)
 
     return {
         "cart": [],
+        "user_name": None,
         "bot_response": f"Order confirmed! You ordered {item_count} item(s) for {_format_cents(total)}.\n"
                        f"Order ID: {order_id}\n"
                        f"Thank you for your order!\n\n"

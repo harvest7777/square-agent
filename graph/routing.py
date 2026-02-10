@@ -1,7 +1,7 @@
 from graph.state import OrderState
 from services.llm_client import client
 
-VALID_INTENTS = ["view_menu", "add_item", "view_cart", "confirm", "cancel", "help", "unknown"]
+VALID_INTENTS = ["view_menu", "add_item", "view_cart", "confirm", "cancel", "help", "unknown", "provide_name"]
 
 INTENT_DETECTION_PROMPT = """You are an intent classifier for a food ordering assistant. Analyze the user's message and classify it into exactly one of the following intents:
 
@@ -36,6 +36,36 @@ INSTRUCTIONS:
 User message: {user_input}
 
 Intent:"""
+
+
+NAME_EXTRACTION_PROMPT = """Extract just the person's name from the following message. The user is providing their name for a food order.
+
+Examples:
+- "I'm Ryan" → Ryan
+- "My name is Sarah" → Sarah
+- "Ryan" → Ryan
+- "Call me Ryan T" → Ryan T
+- "it's Alex" → Alex
+
+Respond with ONLY the extracted name, nothing else.
+
+User message: {user_input}
+
+Name:"""
+
+
+def extract_name(user_input: str) -> str:
+    """Extract a person's name from user input using Gemini."""
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=NAME_EXTRACTION_PROMPT.format(user_input=user_input),
+        )
+        name = response.text.strip() if response.text else None
+        return name if name else user_input.strip()
+    except Exception as e:
+        print(f"Name extraction error: {e}")
+        return user_input.strip()
 
 
 def detect_intent(user_input: str) -> str:
@@ -88,6 +118,16 @@ def classify_intent(state: OrderState) -> dict:
     Returns partial state update with intent and optional warning.
     """
     user_input = state.get("user_input", "")
+
+    # Short-circuit: if we're awaiting a name, extract it and route to confirm
+    if state.get("conversation_stage") == "awaiting_name":
+        user_name = extract_name(user_input)
+        return {
+            "intent": "provide_name",
+            "user_name": user_name,
+            "pending_action_warning": None,
+        }
+
     intent = detect_intent(user_input)
 
     # Check for pending items when user navigates away
@@ -125,7 +165,8 @@ def route_intent(state: OrderState) -> str:
         "view_menu": "show_menu",
         "add_item": "add_to_cart",
         "view_cart": "show_cart",
-        "confirm": "confirm_order",
+        "confirm": "collect_name",
+        "provide_name": "confirm_order",
         "cancel": "cancel_order",
         "help": "show_help",
         "unknown": "handle_unknown",

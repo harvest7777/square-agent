@@ -6,6 +6,7 @@ from graph.nodes import (
     show_menu,
     add_to_cart,
     show_cart,
+    collect_name,
     confirm_order,
     cancel_order,
     show_help,
@@ -44,6 +45,7 @@ def _build_workflow() -> StateGraph:
     workflow.add_node("show_menu", show_menu)
     workflow.add_node("add_to_cart", add_to_cart)
     workflow.add_node("show_cart", show_cart)
+    workflow.add_node("collect_name", collect_name)
     workflow.add_node("confirm_order", confirm_order)
     workflow.add_node("cancel_order", cancel_order)
     workflow.add_node("show_help", show_help)
@@ -66,6 +68,7 @@ def _build_workflow() -> StateGraph:
             "show_menu": "show_menu",
             "add_to_cart": "add_to_cart",
             "show_cart": "show_cart",
+            "collect_name": "collect_name",
             "confirm_order": "confirm_order",
             "cancel_order": "cancel_order",
             "show_help": "show_help",
@@ -78,6 +81,7 @@ def _build_workflow() -> StateGraph:
     workflow.add_edge("show_menu", END)
     workflow.add_edge("add_to_cart", END)
     workflow.add_edge("show_cart", END)
+    workflow.add_edge("collect_name", END)
     workflow.add_edge("confirm_order", END)
     workflow.add_edge("cancel_order", END)
     workflow.add_edge("show_help", END)
