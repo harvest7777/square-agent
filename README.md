@@ -16,16 +16,8 @@ See `.env.example` for descriptions of each variable.
 
 ## Docker
 
-Build the image:
-
 ```bash
-docker build -t square-agent .
-```
-
-Run the agent:
-
-```bash
-docker run --env-file .env -p 8001:8001 square-agent
+docker compose up --build
 ```
 
 ## Local Development
