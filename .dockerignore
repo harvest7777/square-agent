@@ -1,0 +1,11 @@
+.venv
+venv
+__pycache__
+.env
+.env.*
+!.env.example
+!.env.square-oauth.example
+.git
+.cursor
+.claude
+*.pyc

@@ -12,7 +12,8 @@ load_dotenv()
 square_client = SquareClient(token=os.environ["BEARER_TOKEN"], environment=os.environ["ENVIRONMENT"])
 
 # Set to True to bypass the allowlist and show the full catalog.
-SHOW_ALL_PRODUCTS: bool = True 
+# SHOW_ALL_PRODUCTS: bool = True 
+SHOW_ALL_PRODUCTS: bool = False
 
 # Variation-level allowlist: only these variations (and their parent items)
 # are visible in the menu and orderable. Update before each event.
