@@ -30,6 +30,16 @@ def add_to_cart(state: OrderState) -> dict:
     user_input = state.get("user_input", "")
     cart = state.get("cart", []).copy()
 
+    # One item per order — block if cart already has something
+    if cart:
+        existing = cart[0]
+        return {
+            "bot_response": f"You already have {existing['name']} in your cart.\n\n"
+                           f"You can only order one item at this event.\n"
+                           f"Say 'confirm' to checkout, or 'cancel' to clear your cart and pick something else.",
+            "conversation_stage": "ordering"
+        }
+
     items = find_items(user_input)
 
     if not items:
@@ -39,18 +49,18 @@ def add_to_cart(state: OrderState) -> dict:
             "conversation_stage": "ordering"
         }
 
-    cart.extend(items)
+    # Only take the first matched item
+    item = items[0]
+    cart.append(item)
     total = sum(i["price_cents"] for i in cart)
-
-    added_lines = [f"  - {item['name']} ({_format_cents(item['price_cents'])})" for item in items]
-    added_text = "\n".join(added_lines)
 
     return {
         "cart": cart,
-        "bot_response": f"Added {len(items)} item(s) to your cart:\n{added_text}\n\n"
-                       f"Cart total: ~~{_format_cents(total)}~~ $0.00\n"
+        "bot_response": f"Added {item['name']} ({_format_cents(item['price_cents'])}) to your cart.\n\n"
+                       f"Total: ~~{_format_cents(total)}~~ $0.00\n"
                        f"On behalf of Fetch.ai, your total is free for this event!\n\n"
-                       f"Say 'confirm' to checkout, 'cart' to see your order, or keep adding items.",
+                       f"Note: one item per person for this event.\n\n"
+                       f"Say 'confirm' to checkout, 'cart' to see your order, or 'cancel' to pick something else.",
         "conversation_stage": "ordering"
     }
 
@@ -71,7 +81,8 @@ def show_cart(state: OrderState) -> dict:
 
     total = sum(item["price_cents"] for item in cart)
     lines.append(f"\nTotal: {_format_cents(total)}")
-    lines.append("\nSay 'confirm' to checkout or 'cancel' to clear your cart.")
+    lines.append("\nNote: one item per person for this event.")
+    lines.append("\nSay 'confirm' to checkout, or 'cancel' to clear your cart and pick something else.")
 
     return {
         "bot_response": "\n".join(lines),
@@ -162,7 +173,7 @@ def show_help(state: OrderState) -> dict:
 Commands:
   - 'menu'    - See what's available
   - 'cart'    - View your current order
-  - 'add X'   - Add item X to your cart (e.g., 'add burger')
+  - 'add X'   - Add an item to your cart, e.g. 'add matcha' (one item per order)
   - 'confirm' - Place your order
   - 'cancel'  - Clear your cart and start over
   - 'quit'    - Exit the application
