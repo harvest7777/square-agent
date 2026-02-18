@@ -27,6 +27,8 @@ async def handle_message(ctx: Context, sender: str, msg: ChatMessage):
     persistent conversation state (cart, etc.).
     """
 
+    ctx.logger.info(sender)
+
     # Extract text content from the message, stripping any @agent... prefix
     raw_text = msg.content[0].text
     user_input = raw_text.split(maxsplit=1)[1] if raw_text.startswith("@") and " " in raw_text else raw_text

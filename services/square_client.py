@@ -28,6 +28,7 @@ access_token directly to SquareClient:
     locations = client.list_locations()
 """
 
+import os
 import uuid
 from typing import Literal
 
@@ -65,12 +66,21 @@ class SquareClient:
     # ── Locations ────────────────────────────────────────────
 
     def _get_primary_location_id(self) -> str:
-        """Return the cached primary location ID, fetching it once if needed."""
+        """Return the cached primary location ID.
+
+        Checks SQUARE_LOCATION_ID in the environment first; falls back to
+        fetching all locations from the API and using the first one.
+        """
         if self._location_id is None:
-            locations = self.list_locations()
-            if not locations:
-                raise RuntimeError("No locations found for this Square account")
-            self._location_id = locations[0]["id"]
+            env_location_id = os.environ.get("SQUARE_LOCATION_ID", "").strip()
+            print(env_location_id)
+            if env_location_id:
+                self._location_id = env_location_id
+            else:
+                locations = self.list_locations()
+                if not locations:
+                    raise RuntimeError("No locations found for this Square account")
+                self._location_id = locations[0]["id"]
         return self._location_id
 
     def list_locations(self) -> list[dict]:
