@@ -11,6 +11,7 @@ from langchain_core.runnables import RunnableConfig
 
 from graph.graph import graph
 from graph.checkpointer import setup_checkpointer
+import services.agent_orders as agent_orders
 
 # Initialize checkpoint tables on module load
 setup_checkpointer()
@@ -41,6 +42,16 @@ async def handle_message(ctx: Context, sender: str, msg: ChatMessage):
         )
         return
 
+    if agent_orders.has_ordered(sender):
+        await ctx.send(
+            sender,
+            ChatMessage(content=[TextContent(
+                text="Sorry, only one order per person is allowed at this event. "
+                     "Thank you for coming — enjoy the event!"
+            )])
+        )
+        return
+
     ctx.logger.info(f"User input: {user_input}")
 
     # Use session as thread_id for conversation persistence
@@ -60,6 +71,9 @@ async def handle_message(ctx: Context, sender: str, msg: ChatMessage):
             bot_response = "I'm sorry, I couldn't process your request."
 
         ctx.logger.info(f"Bot response: {bot_response}")
+
+        if result.get("order_id"):
+            agent_orders.record_order(sender)
 
     except Exception as e:
         ctx.logger.error(f"Error processing message: {e}")
