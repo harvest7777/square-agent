@@ -79,7 +79,7 @@ def _format_catalog_for_prompt() -> str:
 
 
 ITEM_EXTRACTION_PROMPT = """You are a menu item matcher for a food ordering system.
-Given a user's message and the available menu, identify ALL items the user wants to order.
+Given a user's message and the available menu, identify the ONE item the user wants to order.
 
 MENU:
 {menu}
@@ -87,16 +87,16 @@ MENU:
 USER MESSAGE: {user_input}
 
 INSTRUCTIONS:
-- Extract every item the user mentions or implies they want to order.
-- Match each to the closest menu item and variation.
+- Extract only the single most prominent item the user mentions or implies they want to order.
+- Match it to the closest menu item and variation.
 - If the user doesn't specify a variation, pick the first variation listed.
 - If no items match the menu at all, return an empty list.
+- Return at most one item in the array.
 - Return ONLY valid JSON — no markdown, no explanation.
 
 Response format (JSON array):
 [
-  {{"variation_id": "EXACT_ID_FROM_MENU"}},
-  ...
+  {{"variation_id": "EXACT_ID_FROM_MENU"}}
 ]
 
 If no items found, return: []
