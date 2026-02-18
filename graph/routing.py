@@ -1,4 +1,5 @@
 from graph.state import OrderState
+from graph.data import _format_catalog_for_prompt
 from services.llm_client import client
 
 VALID_INTENTS = ["view_menu", "add_item", "view_cart", "confirm", "cancel", "help", "unknown", "provide_name"]
@@ -11,6 +12,8 @@ INTENTS:
 
 - add_item: User wants to add a specific item to their order or express desire for a food/drink item.
   Examples: "I'll have a burger", "Add a coffee please", "Can I get fries?", "I want a salad", "Give me two pizzas"
+  Menu items for reference:
+{menu}
 
 - view_cart: User wants to see what's currently in their order/cart or review their selections.
   Examples: "What's in my cart?", "Show my order", "What did I order?", "Review my items"
@@ -86,10 +89,11 @@ def detect_intent(user_input: str) -> str:
     """
     try:
         from google.genai import types
-        
+
+        menu_text = _format_catalog_for_prompt()
         response = client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=INTENT_DETECTION_PROMPT.format(user_input=user_input),
+            contents=INTENT_DETECTION_PROMPT.format(user_input=user_input, menu=menu_text),
         )
 
         intent = response.text.strip().lower() if response.text else None

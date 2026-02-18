@@ -203,6 +203,7 @@ class SquareClient:
         self,
         line_items: list[dict],
         name: str | None = None,
+        customer_id: str | None = None,
         idempotency_key: str | None = None,
     ) -> str:
         """
@@ -212,6 +213,7 @@ class SquareClient:
             line_items: List of dicts, each with "variation_id" and
                         optional "quantity" (defaults to "1").
             name: Optional display name for the order (e.g. "Fetch.ai Event").
+            customer_id: Optional Square customer ID to attach to the order.
             idempotency_key: Unique key to prevent duplicate orders.
                              Auto-generated if not provided.
 
@@ -252,15 +254,39 @@ class SquareClient:
         if name:
             order["reference_id"] = name
 
-        response = self._sdk.orders.create(
+        if customer_id:
+            order["customer_id"] = customer_id
+
+        order_response = self._sdk.orders.create(
             idempotency_key=idempotency_key,
             order=order,
         )
 
-        if response.errors:
-            raise RuntimeError(f"Failed to place order: {response.errors}")
+        if order_response.errors:
+            raise RuntimeError(f"Failed to place order: {order_response.errors}")
 
-        return response.order.id
+        created_order = order_response.order
+        order_id = created_order.id
+
+        payment_response = self._sdk.payments.create(
+            idempotency_key=str(uuid.uuid4()),
+            source_id="EXTERNAL",
+            amount_money={
+                "amount": created_order.total_money.amount,
+                "currency": created_order.total_money.currency,
+            },
+            order_id=order_id,
+            location_id=location_id,
+            external_details={
+                "type": "OTHER",
+                "source": "House Account",
+            },
+        )
+
+        if payment_response.errors:
+            raise RuntimeError(f"Failed to record house account payment: {payment_response.errors}")
+
+        return order_id
 
 
 # ── Helpers ──────────────────────────────────────────────────
