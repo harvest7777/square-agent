@@ -2,6 +2,8 @@
 
 Configure the environment variables displayed in the Square Developer dashboard under **OAuth**:
 
+Also ensure your `.env` includes any required non-OAuth variables from `.env.example` (e.g. `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` if you're using Supabase).
+
 ```
 SQUARE_REDIRECT_URI=your_redirect_uri
 SQUARE_CLIENT_ID=your_client_id

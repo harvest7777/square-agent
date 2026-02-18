@@ -14,6 +14,11 @@ cp .env.example .env
 
 See `.env.example` for descriptions of each variable.
 
+If you're using Supabase (see `services/supabase_client.py`), you must also set:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
 ## Docker
 
 ```bash
