@@ -176,7 +176,6 @@ Commands:
   - 'add X'   - Add an item to your cart, e.g. 'add matcha' (one item per order)
   - 'confirm' - Place your order
   - 'cancel'  - Clear your cart and start over
-  - 'quit'    - Exit the application
 
 Just type naturally! For example:
   - "I'll have a cheese burger"
