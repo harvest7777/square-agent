@@ -33,3 +33,6 @@ class OrderState(TypedDict, total=False):
     # Warning shown when user has pending items and changes topic
     # Example: "Note: You have 2 item(s) in your cart."
     pending_action_warning: str | None
+
+    # Square order ID set after a successful order placement
+    order_id: str | None

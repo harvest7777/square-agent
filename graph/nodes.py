@@ -122,6 +122,7 @@ def confirm_order(state: OrderState) -> dict:
     return {
         "cart": [],
         "user_name": None,
+        "order_id": order_id,
         "bot_response": f"Order confirmed! You ordered {item_count} item(s).\n"
                        f"Total: ~~{_format_cents(total)}~~ $0.00\n"
                        f"On behalf of Fetch.ai, your total is free for this event!\n\n"
