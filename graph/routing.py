@@ -11,7 +11,7 @@ INTENTS:
   Examples: "What's on the menu?", "Show me your options", "What do you have?", "What can I order?"
 
 - add_item: User wants to add a specific item to their order or express desire for a food/drink item.
-  Examples: "I'll have a burger", "Add a coffee please", "Can I get fries?", "I want a salad", "Give me two pizzas"
+  Examples: "I'll have a burger", "Add a coffee please", "Can I get fries?", "I want a salad", "I'd like a latte"
   Menu items for reference:
 {menu}
 
