@@ -235,6 +235,18 @@ class SquareClient:
                 }
                 for item in line_items
             ],
+            "fulfillments": [
+                {
+                    "type": "PICKUP",
+                    "state": "PROPOSED",
+                    "pickup_details": {
+                        "recipient": {
+                            "display_name": name or "API Order"
+                        },
+                        "schedule_type": "ASAP",
+                    },
+                }
+            ],
         }
 
         if name:

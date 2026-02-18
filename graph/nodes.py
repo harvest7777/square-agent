@@ -108,7 +108,8 @@ def confirm_order(state: OrderState) -> dict:
         }
 
     user_name = state.get("user_name", "Guest")
-    order_name = f"{user_name} - Fetch.ai Event"
+    # order_name = f"{user_name} - Fetch.ai Event"
+    order_name = "FULFILLMENT TEST"
 
     line_items = [
         {"variation_id": item["variation_id"]}
