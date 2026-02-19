@@ -24,7 +24,7 @@ def main():
         token=token,
     )
 
-    # Fetch the most recent 100 orders using cursor-based pagination
+    # Fetch the most recent 1000 orders using cursor-based pagination
     TARGET = 1000
     all_orders = []
     cursor = None
@@ -32,7 +32,7 @@ def main():
 
     while len(all_orders) < TARGET:
         page += 1
-        fetch = min(TARGET - len(all_orders), 100)
+        fetch = min(TARGET - len(all_orders), 1000)
         kwargs = {
             "location_ids": [location_id],
             "limit": fetch,
@@ -81,7 +81,8 @@ def main():
     subtotal_cents = total_money_cents - total_tip_cents
 
     # Print summary
-    print(f"=== Fetch AI Event Order Summary ===\n")
+    print(f"=== Fetch AI Event Order Summary ===")
+    print(f"Thanks so much On Call Cafe ^.^\n")
     print(f"Total orders:        {len(fetch_orders)}")
     print(f"Subtotal (excl tip): ${subtotal_cents / 100:.2f}")
     print(f"Tips:                ${total_tip_cents / 100:.2f}")
