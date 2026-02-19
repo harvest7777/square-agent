@@ -36,7 +36,9 @@ def main():
         kwargs = {
             "location_ids": [location_id],
             "limit": fetch,
-            "sort": {"sort_field": "CREATED_AT", "sort_order": "DESC"},
+            "query": {
+                "sort": {"sort_field": "CREATED_AT", "sort_order": "DESC"},
+            },
         }
         if cursor:
             kwargs["cursor"] = cursor
