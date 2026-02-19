@@ -25,7 +25,7 @@ def main():
     )
 
     # Fetch the most recent 100 orders using cursor-based pagination
-    TARGET = 100
+    TARGET = 1000
     all_orders = []
     cursor = None
     page = 0
